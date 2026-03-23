@@ -6,9 +6,9 @@ def visualize_graph(graph_data, output_file):
     net = Network(directed=True)
     for i in range(len(graph_data)):
         for triplet in graph_data[i]['triples']:
-            sujet = triplet['sub']
-            relation = triplet['rel']
-            objet = triplet['obj']
+            sujet = triplet['sub'].lower()
+            relation = triplet['rel'].lower()
+            objet = triplet['obj'].lower()
             net.add_node(sujet, label=sujet)
             net.add_node(objet, label=objet)
             net.add_edge(sujet, objet, title=relation)
@@ -19,5 +19,5 @@ def visualize_graph(graph_data, output_file):
 file="data/Text2KGBench_LettrIA/airport/ground_truth.jsonl"
 with open(file, 'r') as f:
     graph_data = [json.loads(line) for line in f]
-visualize_graph(graph_data, 'graph.html')
+visualize_graph(graph_data, 'graph2.html')
 
