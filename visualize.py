@@ -19,5 +19,4 @@ def visualize_graph(graph_data, output_file):
 file="data/Text2KGBench_LettrIA/airport/ground_truth.jsonl"
 with open(file, 'r') as f:
     graph_data = [json.loads(line) for line in f]
-visualize_graph(graph_data, 'graph2.html')
-
+visualize_graph(graph_data, 'graph.html')
