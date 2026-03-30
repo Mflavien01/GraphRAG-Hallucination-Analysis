@@ -13,6 +13,7 @@ for root, dirs, files in os.walk("data/Text2KGBench_LettrIA/"):
     for d in dirs:
         number_sentence = 0
         number_triplet = 0
+        dataset_properties = set()
         with open(f"data/Text2KGBench_LettrIA/{d}/ground_truth.jsonl", "r", encoding="utf-8") as f:
             for line in f:
                 data = json.loads(line)
@@ -20,8 +21,9 @@ for root, dirs, files in os.walk("data/Text2KGBench_LettrIA/"):
                 number_triplet += len(data["triples"])
                 for triples in data["triples"]:
                     set_of_properties.add(triples['rel'])
+                    dataset_properties.add(triples['rel'])
             if d not in stat_per_dataset:
-                stat_per_dataset[d] = {"sentences": number_sentence, "triplets": number_triplet}
+                stat_per_dataset[d] = {"sentences": number_sentence, "triplets": number_triplet, "properties": sorted(dataset_properties)}
             total_sentences += number_sentence
             total_triplets += number_triplet
         g = Graph()
@@ -31,8 +33,8 @@ for root, dirs, files in os.walk("data/Text2KGBench_LettrIA/"):
         for prop in g.subjects(RDF.type, OWL.DatatypeProperty):
             set_of_properties.add(str(prop).split("#")[1])
 
-rows = [{"dataset": d, "sentences": v["sentences"], "triplets": v["triplets"]} for d, v in stat_per_dataset.items()]
-rows.append({"dataset": "TOTAL", "sentences": total_sentences, "triplets": total_triplets})
+rows = [{"dataset": d, "sentences": v["sentences"], "triplets": v["triplets"], "properties": v["properties"]} for d, v in stat_per_dataset.items()]
+rows.append({"dataset": "TOTAL", "sentences": total_sentences, "triplets": total_triplets, "properties": sorted(set_of_properties)})
 
 df_stats = pd.DataFrame(rows)
 df_properties = pd.DataFrame(sorted(set_of_properties), columns=["property"])
