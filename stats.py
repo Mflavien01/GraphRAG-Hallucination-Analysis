@@ -12,7 +12,7 @@ for root, dirs, files in os.walk("data/Text2KGBench_LettrIA/"):
     for d in dirs:
         number_sentence=0
         number_triplet=0
-        with open(f"data/Text2KGBench_LettrIA/{d}/ground_truth.jsonl", "r") as f:
+        with open(f"data/Text2KGBench_LettrIA/{d}/ground_truth.jsonl", "r", encoding="utf-8") as f:
             for line in f:
                 data = json.loads(line)
                 number_sentence += 1
