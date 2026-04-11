@@ -1,0 +1,111 @@
+### Dataset Text2KGBench_LettrIA
+
+```
+            dataset  sentences  triplets  percentage
+             airport         79       260         3.9
+              artist         84       256         4.2
+           astronaut         68       266         3.4
+             athlete        107       304         5.3
+            building        102       276         5.1
+       celestialbody         71       203         3.5
+                city        217      1289        10.8
+     comicscharacter         36        92         1.8
+             company         56       174         2.8
+                film        127       368         6.3
+                food        153       473         7.6
+meanoftransportation         92       271         4.6
+            monument         19        64         0.9
+         musicalwork        209       842        10.4
+          politician        135       415         6.7
+           scientist        149       387         7.4
+          sportsteam        110       375         5.5
+          university         71       337         3.5
+         writtenwork        127       267         6.3
+               TOTAL       2012      6919       100.0
+```
+
+### Dataset OSKGC
+
+```
+               dataset  sentences  triplets  percentage
+             1_Airport         35        35         3.5
+              1_Artist         32        32         3.2
+           1_Astronaut          8         8         0.8
+             1_Athlete         32        32         3.2
+            1_Building         25        25         2.5
+       1_CelestialBody         19        19         1.9
+                1_City         27        27         2.7
+     1_ComicsCharacter         11        11         1.1
+             1_Company         10        10         1.0
+                1_Film          7         7         0.7
+                1_Food         27        27         2.7
+1_MeanOfTransportation         33        33         3.3
+            1_Monument          3         3         0.3
+         1_MusicalWork          8         8         0.8
+          1_Politician         33        33         3.3
+           1_Scientist          7         7         0.7
+          1_SportsTeam         28        28         2.8
+          1_University          7         7         0.7
+         1_WrittenWork         25        25         2.5
+             2_Airport         24        48         2.4
+              2_Artist         27        54         2.7
+           2_Astronaut          6        12         0.6
+             2_Athlete         21        42         2.1
+            2_Building         19        38         1.9
+       2_CelestialBody         15        30         1.5
+                2_City         23        46         2.3
+     2_ComicsCharacter          9        18         0.9
+             2_Company         10        20         1.0
+                2_Film          4         8         0.4
+                2_Food         28        56         2.8
+2_MeanOfTransportation         24        48         2.4
+            2_Monument          3         6         0.3
+         2_MusicalWork          4         8         0.4
+          2_Politician         28        56         2.8
+           2_Scientist          5        10         0.5
+          2_SportsTeam         19        38         1.9
+          2_University          5        10         0.5
+         2_WrittenWork         23        46         2.3
+             3_Airport         22        66         2.2
+              3_Artist         29        87         2.9
+           3_Astronaut          8        24         0.8
+             3_Athlete         25        75         2.5
+            3_Building         21        63         2.1
+       3_CelestialBody         15        45         1.5
+                3_City         24        72         2.4
+     3_ComicsCharacter          7        21         0.7
+             3_Company          9        27         0.9
+                3_Film          5        15         0.5
+                3_Food         31        93         3.1
+                3_Film          5        15         0.5
+                3_Food         31        93         3.1
+3_MeanOfTransportation         24        72         2.4
+                3_Film          5        15         0.5
+                3_Food         31        93         3.1
+                3_Film          5        15         0.5
+                3_Food         31        93         3.1
+                3_Film          5        15         0.5
+                3_Food         31        93         3.1
+                3_Film          5        15         0.5
+                3_Food         31        93         3.1
+3_MeanOfTransportation         24        72         2.4
+                3_Film          5        15         0.5
+                3_Food         31        93         3.1
+                3_Film          5        15         0.5
+                3_Food         31        93         3.1
+3_MeanOfTransportation         24        72         2.4
+            3_Monument          4        12         0.4
+         3_MusicalWork          5        15         0.5
+3_MeanOfTransportation         24        72         2.4
+            3_Monument          4        12         0.4
+         3_MusicalWork          5        15         0.5
+            3_Monument          4        12         0.4
+         3_MusicalWork          5        15         0.5
+         3_MusicalWork          5        15         0.5
+          3_Politician         29        87         2.9
+           3_Scientist          5        15         0.5
+          3_SportsTeam         19        57         1.9
+          3_University          7        21         0.7
+         3_WrittenWork         27        81         2.7
+                 TOTAL        990      1919       100.0
+```
