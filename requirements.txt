@@ -1,2 +1,7 @@
 rdflib
 pyvis
+python-dotenv
+google-genai
+transformers
+torch
+sentencepiece

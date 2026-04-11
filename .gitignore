@@ -1,5 +1,6 @@
 /data
 /lib
+output_questions/
 *.html
-*.xls
-*.xlsx
+*.env
+*.txt
