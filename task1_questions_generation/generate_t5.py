@@ -1,18 +1,11 @@
-"""Question generation using the T5 model (valhalla/t5-small-qa-qg-hl).
-
-Extracts answer spans from each sentence, then generates a question per answer.
-Runs locally without any API key.
-"""
 import json
 import os
 from transformers import T5ForConditionalGeneration, T5Tokenizer
-
 from data_loader import load_lettria, load_oskgc, sample_proportional
+from dotenv import load_dotenv
+from pathlib import Path
 
-
-# ==============================================================================
 # Core T5 logic
-# ==============================================================================
 
 tokenizer = T5Tokenizer.from_pretrained("valhalla/t5-small-qa-qg-hl") # load the T5 tokenizer for the specified model to process input and output text
 model     = T5ForConditionalGeneration.from_pretrained("valhalla/t5-small-qa-qg-hl") # load the T5 model for answer extraction + question generation based on t5-small-qa-qg-hl model
@@ -44,9 +37,9 @@ def generate_question(text, answer):
     return run_model(f"generate question: {highlighted}", max_length=64) # model return the generated question based on the highlighted answer in the sentence
 
 
-# ==============================================================================
+
 # Dataset integration layer
-# ==============================================================================
+
 
 def generate_questions(entries, dataset_name):
     """Run the full T5 pipeline on a list of dataset entries and return structured results"""
@@ -84,28 +77,26 @@ def save_results(results, output_path):
     print(f"  → Saved: {output_path} ({len(results)} entries)")
 
 
-if __name__ == "__main__":
-    from dotenv import load_dotenv
-    from pathlib import Path
 
-    PROJECT_ROOT = Path(__file__).parent.parent
-    load_dotenv(PROJECT_ROOT / ".env") # load env variables (dataset paths, etc.)
 
-    OUTPUT_DIR  = "output_questions"
-    lettria_dir = PROJECT_ROOT / os.getenv("LETTRIA_DIR") # path to LettrIA dataset
-    oskgc_dir   = PROJECT_ROOT / os.getenv("OSKGC_DIR")   # path to OSKGC dataset
+PROJECT_ROOT = Path(__file__).parent.parent
+load_dotenv(PROJECT_ROOT / ".env") # load env variables (dataset paths, etc.)
 
-    print("\n=== DATASET: LettrIA ===")
-    lettria_sample = sample_proportional(load_lettria(lettria_dir), 50) # load and sample 50 entries proportionally across categories
-    print("Generating questions...")
-    lettria_results = generate_questions(lettria_sample, "lettria")
-    save_results(lettria_results, f"{OUTPUT_DIR}/questions_t5_lettria.jsonl")
+OUTPUT_DIR  = "output_questions"
+lettria_dir = PROJECT_ROOT / os.getenv("LETTRIA_DIR") # path to LettrIA dataset
+oskgc_dir   = PROJECT_ROOT / os.getenv("OSKGC_DIR")   # path to OSKGC dataset
 
-    print("\n=== DATASET: OSKGC ===")
-    oskgc_sample = sample_proportional(load_oskgc(oskgc_dir), 50) # same for OSKGC
-    print("Generating questions...")
-    oskgc_results = generate_questions(oskgc_sample, "oskgc")
-    save_results(oskgc_results, f"{OUTPUT_DIR}/questions_t5_oskgc.jsonl")
+print("DATASET: LettrIA")
+lettria_sample = sample_proportional(load_lettria(lettria_dir), 50) # load and sample 50 entries proportionally across categories
+print("Generating questions...")
+lettria_results = generate_questions(lettria_sample, "lettria")
+save_results(lettria_results, f"{OUTPUT_DIR}/questions_t5_lettria.jsonl")
 
-    print(f"\n=== DONE ===")
-    print(f"Total: {len(lettria_results) + len(oskgc_results)} entries processed")
+print("DATASET: OSKGC ")
+oskgc_sample = sample_proportional(load_oskgc(oskgc_dir), 50) # same for OSKGC
+print("Generating questions...")
+oskgc_results = generate_questions(oskgc_sample, "oskgc")
+save_results(oskgc_results, f"{OUTPUT_DIR}/questions_t5_oskgc.jsonl")
+
+print("DONE")
+print(f"Total: {len(lettria_results) + len(oskgc_results)} entries processed")

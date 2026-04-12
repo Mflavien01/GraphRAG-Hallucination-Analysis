@@ -127,20 +127,20 @@ def save_results(results, output_path):
     print(f"  → Saved: {output_path} ({len(results)} entries)")
 
 
-if __name__ == "__main__":
-    OUTPUT_DIR = "output_questions"
 
-    print("\n=== DATASET: LettrIA ===")
-    lettria_sample = sample_proportional(load_lettria(lettria_dir), 50) # load and sample 50 entries proportionally across categories
-    print("Generating questions...")
-    lettria_results = generate_questions(lettria_sample, "lettria")
-    save_results(lettria_results, f"{OUTPUT_DIR}/questions_lettria.jsonl")
+OUTPUT_DIR = "output_questions"
 
-    print("\n=== DATASET: OSKGC ===")
-    oskgc_sample = sample_proportional(load_oskgc(oskgc_dir), 50) # same for OSKGC
-    print("Generating questions...")
-    oskgc_results = generate_questions(oskgc_sample, "oskgc")
-    save_results(oskgc_results, f"{OUTPUT_DIR}/questions_oskgc.jsonl")
+print("DATASET: LettrIA")
+lettria_sample = sample_proportional(load_lettria(lettria_dir), 50) # load and sample 50 entries proportionally across categories
+print("Generating questions...")
+lettria_results = generate_questions(lettria_sample, "lettria")
+save_results(lettria_results, f"{OUTPUT_DIR}/questions_lettria.jsonl")
 
-    print(f"\n=== DONE ===")
-    print(f"Total: {len(lettria_results) + len(oskgc_results)} questions generated")
+print("DATASET: OSKGC")
+oskgc_sample = sample_proportional(load_oskgc(oskgc_dir), 50) # same for OSKGC
+print("Generating questions...")
+oskgc_results = generate_questions(oskgc_sample, "oskgc")
+save_results(oskgc_results, f"{OUTPUT_DIR}/questions_oskgc.jsonl")
+
+print("DONE")
+print(f"Total: {len(lettria_results) + len(oskgc_results)} questions generated")
