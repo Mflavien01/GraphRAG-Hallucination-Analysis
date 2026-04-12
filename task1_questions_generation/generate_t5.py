@@ -9,6 +9,11 @@ from transformers import T5ForConditionalGeneration, T5Tokenizer
 
 from data_loader import load_lettria, load_oskgc, sample_proportional
 
+
+# ==============================================================================
+# Core T5 logic
+# ==============================================================================
+
 tokenizer = T5Tokenizer.from_pretrained("valhalla/t5-small-qa-qg-hl") # load the T5 tokenizer for the specified model to process input and output text
 model     = T5ForConditionalGeneration.from_pretrained("valhalla/t5-small-qa-qg-hl") # load the T5 model for answer extraction + question generation based on t5-small-qa-qg-hl model
 
@@ -39,6 +44,10 @@ def generate_question(text, answer):
     return run_model(f"generate question: {highlighted}", max_length=64) # model return the generated question based on the highlighted answer in the sentence
 
 
+# ==============================================================================
+# Dataset integration layer
+# ==============================================================================
+
 def generate_questions(entries, dataset_name):
     results = []
     total = len(entries)
@@ -54,7 +63,7 @@ def generate_questions(entries, dataset_name):
         ]
 
         results.append({
-            "id":       f"{dataset_name}_{i+1:03d}",
+            "id":        f"{dataset_name}_{i+1:03d}",
             "source_id": entry["id"],
             "dataset":   dataset_name,
             "category":  entry["category"],
