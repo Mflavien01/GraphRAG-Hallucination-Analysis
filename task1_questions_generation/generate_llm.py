@@ -13,19 +13,22 @@ from google import genai
 from data_loader import load_lettria, load_oskgc, sample_proportional
 
 PROJECT_ROOT = Path(__file__).parent.parent
-load_dotenv(PROJECT_ROOT / ".env")
+load_dotenv(PROJECT_ROOT / ".env") # load env variables (API key, dataset paths)
 
-client      = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
-lettria_dir = PROJECT_ROOT / os.getenv("LETTRIA_DIR")
-oskgc_dir   = PROJECT_ROOT / os.getenv("OSKGC_DIR")
+client      = genai.Client(api_key=os.getenv("GEMINI_API_KEY")) # initialize Gemini client with API key
+lettria_dir = PROJECT_ROOT / os.getenv("LETTRIA_DIR") # path to LettrIA dataset
+oskgc_dir   = PROJECT_ROOT / os.getenv("OSKGC_DIR")   # path to OSKGC dataset
 
 
 def build_prompt(entry):
+    """Build the prompt sent to Gemini for a given dataset entry"""
     triples_str = "\n".join(
         f"- ({t['sub']}, {t['rel']}, {t['obj']})"
-        for t in entry["triples"]
+        for t in entry["triples"] # format each triple as (subject, relation, object)
     )
 
+    # ask Gemini to generate 4 types of questions based strictly on the sentence and triples
+    # 2 text-based (single-hop and multi-hop) + 2 graph-based (single-hop and multi-hop)
     return f"""You are an expert in Knowledge Graph Question Answering.
 
 Here is a real knowledge graph entry.
@@ -54,6 +57,7 @@ Output ONLY valid JSON, no explanation, no markdown:
 
 
 def call_gemini(prompt, max_retries=3):
+    """Send the prompt to Gemini and return the parsed JSON response"""
     for attempt in range(max_retries):
         try:
             response = client.models.generate_content(
@@ -63,46 +67,48 @@ def call_gemini(prompt, max_retries=3):
             raw_text = response.text.strip()
 
             if raw_text.startswith("```"):
+                # sometimes Gemini wraps the JSON in a markdown code block, strip it
                 lines = raw_text.split("\n")
                 raw_text = "\n".join(lines[1:-1])
 
-            return json.loads(raw_text)
+            return json.loads(raw_text) # parse the JSON response
 
         except json.JSONDecodeError:
             print(f"  [!] Invalid JSON (attempt {attempt + 1}/{max_retries})")
-            time.sleep(2)
+            time.sleep(2) # wait before retrying
         except Exception as e:
             print(f"  [!] API error: {e} (attempt {attempt + 1}/{max_retries})")
-            time.sleep(5)
+            time.sleep(5) # longer wait on API error (rate limit, network, etc.)
 
     print("  [✗] Failed after 3 attempts")
     return None
 
 
 def generate_questions(entries, dataset_name):
+    """Run the full LLM pipeline on a list of dataset entries and return structured results"""
     results = []
     total = len(entries)
 
     for i, entry in enumerate(entries):
         print(f"  [{i+1}/{total}] {entry['id']} ({entry['category']})")
 
-        prompt = build_prompt(entry)
+        prompt = build_prompt(entry) # build the prompt for this entry
 
-        # Respect free-tier rate limit (10 req/min)
+        # respect free-tier rate limit (10 req/min) — wait 7s between each call
         if i > 0:
             time.sleep(7)
 
         questions = call_gemini(prompt)
-        if questions is None:
+        if questions is None: # skip entry if all retries failed
             continue
 
         results.append({
-            "id":               f"{dataset_name}_{i+1:03d}",
-            "source_id":        entry["id"],
+            "id":               f"{dataset_name}_{i+1:03d}", # unique id for the generated entry
+            "source_id":        entry["id"],                  # original id from the dataset
             "dataset":          dataset_name,
             "category":         entry["category"],
-            "original_sent":    entry["sent"],
-            "original_triples": entry["triples"],
+            "original_sent":    entry["sent"],                # original sentence used to generate questions
+            "original_triples": entry["triples"],             # knowledge graph triples used to generate questions
             "text_single_hop":  questions.get("text_single_hop", {}),
             "text_multi_hop":   questions.get("text_multi_hop", {}),
             "graph_single_hop": questions.get("graph_single_hop", {}),
@@ -113,10 +119,11 @@ def generate_questions(entries, dataset_name):
 
 
 def save_results(results, output_path):
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    """Save results as a .jsonl file (one JSON object per line)"""
+    os.makedirs(os.path.dirname(output_path), exist_ok=True) # create output directory if it doesn't exist
     with open(output_path, "w", encoding="utf-8") as f:
         for r in results:
-            f.write(json.dumps(r, ensure_ascii=False) + "\n")
+            f.write(json.dumps(r, ensure_ascii=False) + "\n") # write each result as a single JSON line
     print(f"  → Saved: {output_path} ({len(results)} entries)")
 
 
@@ -124,13 +131,13 @@ if __name__ == "__main__":
     OUTPUT_DIR = "output_questions"
 
     print("\n=== DATASET: LettrIA ===")
-    lettria_sample = sample_proportional(load_lettria(lettria_dir), 50)
+    lettria_sample = sample_proportional(load_lettria(lettria_dir), 50) # load and sample 50 entries proportionally across categories
     print("Generating questions...")
     lettria_results = generate_questions(lettria_sample, "lettria")
     save_results(lettria_results, f"{OUTPUT_DIR}/questions_lettria.jsonl")
 
     print("\n=== DATASET: OSKGC ===")
-    oskgc_sample = sample_proportional(load_oskgc(oskgc_dir), 50)
+    oskgc_sample = sample_proportional(load_oskgc(oskgc_dir), 50) # same for OSKGC
     print("Generating questions...")
     oskgc_results = generate_questions(oskgc_sample, "oskgc")
     save_results(oskgc_results, f"{OUTPUT_DIR}/questions_oskgc.jsonl")

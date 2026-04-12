@@ -13,26 +13,26 @@ def load_lettria(lettria_dir):
     entries = []
     base = Path(lettria_dir)
 
-    for category_dir in sorted(base.iterdir()):
+    for category_dir in sorted(base.iterdir()): # iterate over each category folder
         if not category_dir.is_dir():
             continue
 
-        gt_file = category_dir / "ground_truth.jsonl"
+        gt_file = category_dir / "ground_truth.jsonl" # each category has a ground_truth.jsonl file
         if not gt_file.exists():
             continue
 
-        category = category_dir.name
+        category = category_dir.name # use the folder name as category label
 
         with open(gt_file, "r", encoding="utf-8") as f:
-            for line in f:
+            for line in f: # each line is a separate JSON entry
                 data = json.loads(line)
                 entries.append({
                     "id":       data.get("id", ""),
                     "category": category,
-                    "sent":     data["sent"],
+                    "sent":     data["sent"],    # raw sentence
                     "triples":  [
                         {"sub": t["sub"], "rel": t["rel"], "obj": t["obj"]}
-                        for t in data["triples"]
+                        for t in data["triples"] # keep only subject, relation, object for each triple
                     ]
                 })
 
@@ -48,8 +48,8 @@ def load_oskgc(oskgc_dir):
     entries = []
     base = Path(oskgc_dir)
 
-    for xml_file in sorted(base.glob("*.xml")):
-        tree = ET.parse(xml_file)
+    for xml_file in sorted(base.glob("*.xml")): # OSKGC is stored as XML files, one per category
+        tree = ET.parse(xml_file) # parse the XML file
         root = tree.getroot()
 
         for entry in root.findall("entries/entry"):
@@ -57,21 +57,21 @@ def load_oskgc(oskgc_dir):
             category = entry.get("category", "")
 
             text_node = entry.find("text")
-            sent = text_node.text.strip() if text_node is not None else ""
+            sent = text_node.text.strip() if text_node is not None else "" # extract the raw sentence
 
             triples = []
-            for triple in entry.findall(".//triple"):
+            for triple in entry.findall(".//triple"): # extract all triples in the entry
                 sub = triple.find("sub")
                 rel = triple.find("rel")
                 obj = triple.find("obj")
-                if sub is not None and rel is not None and obj is not None:
+                if sub is not None and rel is not None and obj is not None: # only keep complete triples
                     triples.append({
                         "sub": sub.text.strip(),
                         "rel": rel.text.strip(),
                         "obj": obj.text.strip()
                     })
 
-            if sent and triples:
+            if sent and triples: # skip entries with no sentence or no triples
                 entries.append({
                     "id":       entry_id,
                     "category": category,
@@ -88,23 +88,23 @@ def sample_proportional(entries, n, seed=42):
 
     Each category contributes entries proportional to its share of the total.
     """
-    random.seed(seed)
+    random.seed(seed) # fix seed for reproducibility
 
     by_category = defaultdict(list)
     for e in entries:
-        by_category[e["category"]].append(e)
+        by_category[e["category"]].append(e) # group entries by category
 
     total = len(entries)
     sampled = []
 
     for category, items in by_category.items():
-        proportion = len(items) / total
-        n_cat = max(1, round(proportion * n))
-        picked = random.sample(items, min(n_cat, len(items)))
+        proportion = len(items) / total          # share of this category in the full dataset
+        n_cat = max(1, round(proportion * n))    # number of entries to sample from this category (at least 1)
+        picked = random.sample(items, min(n_cat, len(items))) # random sample without replacement
         sampled.extend(picked)
 
-    random.shuffle(sampled)
-    sampled = sampled[:n]
+    random.shuffle(sampled) # shuffle to mix categories in the final list
+    sampled = sampled[:n]   # trim to exactly n entries in case of rounding excess
 
     print(f"  → {len(sampled)} entries selected out of {total}")
     return sampled

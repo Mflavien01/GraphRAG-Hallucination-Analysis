@@ -34,9 +34,9 @@ def extract_answers(text):
         raw = run_model(f"extract_answers: <hl> {sent} <hl>") # model return answers spans splitted by <sep>
         for a in raw.split("<sep>"): # model splits string with <sep> to obtain answers individually
             a = a.strip() # remove whitespace of answers
-            if a and a in text:
+            if a and a in text: # keep only non-empty answers that actually appear in the original text
                 answers.append(a)
-    return list(set(answers))
+    return list(set(answers)) # remove duplicates
 
 
 def generate_question(text, answer):
@@ -49,22 +49,23 @@ def generate_question(text, answer):
 # ==============================================================================
 
 def generate_questions(entries, dataset_name):
+    """Run the full T5 pipeline on a list of dataset entries and return structured results"""
     results = []
     total = len(entries)
 
     for i, entry in enumerate(entries):
         print(f"  [{i+1}/{total}] {entry['id']} ({entry['category']})")
 
-        sentence = entry["sent"]
-        answers  = extract_answers(sentence)
+        sentence = entry["sent"] # raw sentence from the dataset entry
+        answers  = extract_answers(sentence) # extract all answer spans from the sentence
         qa_pairs = [
             {"question": generate_question(sentence, ans), "answer": ans}
-            for ans in answers
+            for ans in answers # generate one question per extracted answer
         ]
 
         results.append({
-            "id":        f"{dataset_name}_{i+1:03d}",
-            "source_id": entry["id"],
+            "id":        f"{dataset_name}_{i+1:03d}", # unique id for the generated entry
+            "source_id": entry["id"],                 # original id from the dataset
             "dataset":   dataset_name,
             "category":  entry["category"],
             "sentence":  sentence,
@@ -75,10 +76,11 @@ def generate_questions(entries, dataset_name):
 
 
 def save_results(results, output_path):
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    """Save results as a .jsonl file (one JSON object per line)"""
+    os.makedirs(os.path.dirname(output_path), exist_ok=True) # create output directory if it doesn't exist
     with open(output_path, "w", encoding="utf-8") as f:
         for r in results:
-            f.write(json.dumps(r, ensure_ascii=False) + "\n")
+            f.write(json.dumps(r, ensure_ascii=False) + "\n") # write each result as a single JSON line
     print(f"  → Saved: {output_path} ({len(results)} entries)")
 
 
@@ -87,20 +89,20 @@ if __name__ == "__main__":
     from pathlib import Path
 
     PROJECT_ROOT = Path(__file__).parent.parent
-    load_dotenv(PROJECT_ROOT / ".env")
+    load_dotenv(PROJECT_ROOT / ".env") # load env variables (dataset paths, etc.)
 
     OUTPUT_DIR  = "output_questions"
-    lettria_dir = PROJECT_ROOT / os.getenv("LETTRIA_DIR")
-    oskgc_dir   = PROJECT_ROOT / os.getenv("OSKGC_DIR")
+    lettria_dir = PROJECT_ROOT / os.getenv("LETTRIA_DIR") # path to LettrIA dataset
+    oskgc_dir   = PROJECT_ROOT / os.getenv("OSKGC_DIR")   # path to OSKGC dataset
 
     print("\n=== DATASET: LettrIA ===")
-    lettria_sample = sample_proportional(load_lettria(lettria_dir), 50)
+    lettria_sample = sample_proportional(load_lettria(lettria_dir), 50) # load and sample 50 entries proportionally across categories
     print("Generating questions...")
     lettria_results = generate_questions(lettria_sample, "lettria")
     save_results(lettria_results, f"{OUTPUT_DIR}/questions_t5_lettria.jsonl")
 
     print("\n=== DATASET: OSKGC ===")
-    oskgc_sample = sample_proportional(load_oskgc(oskgc_dir), 50)
+    oskgc_sample = sample_proportional(load_oskgc(oskgc_dir), 50) # same for OSKGC
     print("Generating questions...")
     oskgc_results = generate_questions(oskgc_sample, "oskgc")
     save_results(oskgc_results, f"{OUTPUT_DIR}/questions_t5_oskgc.jsonl")
