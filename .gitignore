@@ -4,3 +4,5 @@ output_questions/
 *.html
 *.env
 *.txt
+*.pyc
+__pycache__/
