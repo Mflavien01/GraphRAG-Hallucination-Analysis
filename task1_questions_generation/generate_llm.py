@@ -1,8 +1,3 @@
-"""Question generation using Gemini LLM.
-
-Generates 4 structured question types per entry (text/graph × single/multi-hop)
-based on the sentence and its knowledge graph triples.
-"""
 import json
 import os
 import time
