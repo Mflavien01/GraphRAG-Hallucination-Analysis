@@ -42,7 +42,7 @@ def generate_question(text, answer):
 
 
 def generate_questions(entries, dataset_name):
-    """Run the full T5 pipeline on a list of dataset entries and return structured results"""
+    """Run the T5 pipeline on dataset entries and return text QA results."""
     results = []
     total = len(entries)
 
@@ -83,17 +83,18 @@ PROJECT_ROOT = Path(__file__).parent.parent
 load_dotenv(PROJECT_ROOT / ".env") # load env variables (dataset paths, etc.)
 
 OUTPUT_DIR  = "output_questions"
+SAMPLES_PER_DATASET = 100
 lettria_dir = PROJECT_ROOT / os.getenv("LETTRIA_DIR") # path to LettrIA dataset
 oskgc_dir   = PROJECT_ROOT / os.getenv("OSKGC_DIR")   # path to OSKGC dataset
 
 print("DATASET: LettrIA")
-lettria_sample = sample_proportional(load_lettria(lettria_dir), 50) # load and sample 50 entries proportionally across categories
+lettria_sample = sample_proportional(load_lettria(lettria_dir), SAMPLES_PER_DATASET)
 print("Generating questions...")
 lettria_results = generate_questions(lettria_sample, "lettria")
 save_results(lettria_results, f"{OUTPUT_DIR}/questions_t5_lettria.jsonl")
 
 print("DATASET: OSKGC ")
-oskgc_sample = sample_proportional(load_oskgc(oskgc_dir), 50) # same for OSKGC
+oskgc_sample = sample_proportional(load_oskgc(oskgc_dir), SAMPLES_PER_DATASET)
 print("Generating questions...")
 oskgc_results = generate_questions(oskgc_sample, "oskgc")
 save_results(oskgc_results, f"{OUTPUT_DIR}/questions_t5_oskgc.jsonl")

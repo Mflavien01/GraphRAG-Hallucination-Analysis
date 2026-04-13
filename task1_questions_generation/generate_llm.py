@@ -117,31 +117,28 @@ def default_multi_hop(reason="insufficient_connected_triples"):
 
 
 def build_prompt(entry, allow_multihop):
-    """Build the prompt sent to Gemini for a given dataset entry"""
+    """Build the prompt sent to Gemini for graph-only question generation."""
     triples_str = "\n".join(
         f"- ({t['sub']}, {t['rel']}, {t['obj']})"
         for t in entry["triples"] # format each triple as (subject, relation, object)
     )
 
-    # ask Gemini to generate grounded questions based strictly on sentence + triples
+    # Ask Gemini to generate grounded graph questions only.
     multi_hop_policy = """
-Generate exactly 4 questions based STRICTLY on the data above. No external knowledge.
+Generate exactly 2 graph questions based STRICTLY on the triples above. No external knowledge.
 
-1. TEXT_SINGLE_HOP: simple question, answer from the sentence, 1 fact only.
-2. TEXT_MULTI_HOP: complex question, answer requires combining 2+ facts from the sentence.
-3. GRAPH_SINGLE_HOP: simple question, answer from exactly 1 triple.
-4. GRAPH_MULTI_HOP: complex question, answer requires traversing 2+ connected triples.
+1. GRAPH_SINGLE_HOP: simple question, answer from exactly 1 triple.
+2. GRAPH_MULTI_HOP: complex question, answer requires traversing 2+ connected triples.
 
 For multi-hop questions, add a "chain" field showing reasoning steps using -> between each hop.
 """ if allow_multihop else """
-Generate questions based STRICTLY on the data above. No external knowledge.
+Generate graph questions based STRICTLY on the triples above. No external knowledge.
 
 Required:
-1. TEXT_SINGLE_HOP: simple question, answer from the sentence, 1 fact only.
-2. GRAPH_SINGLE_HOP: simple question, answer from exactly 1 triple.
+1. GRAPH_SINGLE_HOP: simple question, answer from exactly 1 triple.
 
 Do NOT create multi-hop questions for this entry because the triples do not contain enough connected facts.
-Set both text_multi_hop and graph_multi_hop to null fields exactly as shown in the output schema.
+Set graph_multi_hop to null fields exactly as shown in the output schema.
 """
 
     return f"""You are an expert in Knowledge Graph Question Answering.
@@ -162,8 +159,6 @@ Important grounding constraints:
 
 Output ONLY valid JSON, no explanation, no markdown:
 {{
-  "text_single_hop": {{"question": "...", "answer": "..."}},
-    "text_multi_hop": {{"question": null, "answer": null, "chain": null}},
   "graph_single_hop": {{"question": "...", "answer": "..."}},
     "graph_multi_hop": {{"question": null, "answer": null, "chain": null}}
 }}"""
@@ -210,7 +205,7 @@ def call_gemini(prompt, max_retries=3):
 
 
 def generate_questions(entries, dataset_name):
-    """Run the full LLM pipeline on a list of dataset entries and return structured results"""
+    """Run the LLM pipeline on dataset entries and return graph-only QA results."""
     results = []
     total = len(entries)
 
@@ -224,10 +219,8 @@ def generate_questions(entries, dataset_name):
         if questions is None: # skip entry if all retries failed
             continue
 
-        text_multi_hop = questions.get("text_multi_hop", {})
         graph_multi_hop = questions.get("graph_multi_hop", {})
         if not allow_multihop:
-            text_multi_hop = default_multi_hop()
             graph_multi_hop = default_multi_hop()
 
         results.append({
@@ -237,8 +230,6 @@ def generate_questions(entries, dataset_name):
             "category":         entry["category"],
             "original_sent":    entry["sent"],                # original sentence used to generate questions
             "original_triples": entry["triples"],             # knowledge graph triples used to generate questions
-            "text_single_hop":  questions.get("text_single_hop", {}),
-            "text_multi_hop":   text_multi_hop,
             "graph_single_hop": questions.get("graph_single_hop", {}),
             "graph_multi_hop":  graph_multi_hop,
         })
@@ -257,18 +248,19 @@ def save_results(results, output_path):
 
 
 OUTPUT_DIR = "output_questions"
+SAMPLES_PER_DATASET = 100
 
 print("DATASET: LettrIA")
-lettria_sample = sample_proportional(load_lettria(lettria_dir), 50) # load and sample 50 entries proportionally across categories
+lettria_sample = sample_proportional(load_lettria(lettria_dir), SAMPLES_PER_DATASET)
 print("Generating questions...")
 lettria_results = generate_questions(lettria_sample, "lettria")
-save_results(lettria_results, f"{OUTPUT_DIR}/questions_lettria.jsonl")
+save_results(lettria_results, f"{OUTPUT_DIR}/questions_graph_lettria.jsonl")
 
 print("DATASET: OSKGC")
-oskgc_sample = sample_proportional(load_oskgc(oskgc_dir), 50) # same for OSKGC
+oskgc_sample = sample_proportional(load_oskgc(oskgc_dir), SAMPLES_PER_DATASET)
 print("Generating questions...")
 oskgc_results = generate_questions(oskgc_sample, "oskgc")
-save_results(oskgc_results, f"{OUTPUT_DIR}/questions_oskgc.jsonl")
+save_results(oskgc_results, f"{OUTPUT_DIR}/questions_graph_oskgc.jsonl")
 
 print("DONE")
-print(f"Total: {len(lettria_results) + len(oskgc_results)} questions generated")
+print(f"Total: {len(lettria_results) + len(oskgc_results)} graph entries processed")
