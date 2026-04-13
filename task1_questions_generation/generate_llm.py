@@ -10,20 +10,140 @@ from data_loader import load_lettria, load_oskgc, sample_proportional
 PROJECT_ROOT = Path(__file__).parent.parent
 load_dotenv(PROJECT_ROOT / ".env") # load env variables (API key, dataset paths)
 
-client      = genai.Client(api_key=os.getenv("GEMINI_API_KEY")) # initialize Gemini client with API key
+
+def load_gemini_clients():
+    """Load one or many Gemini API keys from env and return initialized clients."""
+    keys = []
+
+    # Preferred format: GEMINI_API_KEYS="key1,key2,key3"
+    keys_csv = os.getenv("GEMINI_API_KEYS", "").strip()
+    if keys_csv:
+        keys.extend([k.strip() for k in keys_csv.split(",") if k.strip()])
+
+    # Backward compatible: GEMINI_API_KEY="single_key"
+    single_key = os.getenv("GEMINI_API_KEY", "").strip()
+    if single_key and single_key not in keys:
+        keys.append(single_key)
+
+    if not keys:
+        raise ValueError("No Gemini API key found. Set GEMINI_API_KEY or GEMINI_API_KEYS in .env")
+
+    return [genai.Client(api_key=k) for k in keys]
+
+
+clients = load_gemini_clients()
+
+# Free tier constraints can be tuned from env if needed.
+PER_KEY_RPM = max(1, int(os.getenv("GEMINI_PER_KEY_RPM", "5")))
+PER_KEY_DAILY_LIMIT = max(1, int(os.getenv("GEMINI_PER_KEY_DAILY_LIMIT", "20")))
+MIN_SECONDS_BETWEEN_CALLS = 60.0 / PER_KEY_RPM
+
+_key_last_call_ts = [0.0] * len(clients)
+_key_calls_today = [0] * len(clients)
+_current_day = time.strftime("%Y-%m-%d")
+_next_client_idx = 0
+
+
+def _reset_daily_counters_if_needed():
+    global _current_day, _key_calls_today
+    today = time.strftime("%Y-%m-%d")
+    if today != _current_day:
+        _current_day = today
+        _key_calls_today = [0] * len(clients)
+
+
+def _reserve_next_client_slot():
+    """Pick the next available client using round-robin + rate/daily limits."""
+    global _next_client_idx
+
+    _reset_daily_counters_if_needed()
+    now = time.time()
+
+    best_idx = None
+    best_wait = None
+
+    for offset in range(len(clients)):
+        idx = (_next_client_idx + offset) % len(clients)
+
+        if _key_calls_today[idx] >= PER_KEY_DAILY_LIMIT:
+            continue
+
+        wait = max(0.0, MIN_SECONDS_BETWEEN_CALLS - (now - _key_last_call_ts[idx]))
+        if wait == 0.0:
+            _next_client_idx = (idx + 1) % len(clients)
+            return idx, 0.0
+
+        if best_wait is None or wait < best_wait:
+            best_idx = idx
+            best_wait = wait
+
+    if best_idx is not None:
+        _next_client_idx = (best_idx + 1) % len(clients)
+        return best_idx, best_wait
+
+    return None, None
+
+
 lettria_dir = PROJECT_ROOT / os.getenv("LETTRIA_DIR") # path to LettrIA dataset
 oskgc_dir   = PROJECT_ROOT / os.getenv("OSKGC_DIR")   # path to OSKGC dataset
 
 
-def build_prompt(entry):
+def has_connected_multihop(triples):
+    """Return True if at least 2 triples are connected through a shared entity."""
+    if len(triples) < 2:
+        return False
+
+    nodes_per_triple = []
+    for t in triples:
+        sub = str(t.get("sub", "")).strip()
+        obj = str(t.get("obj", "")).strip()
+        nodes_per_triple.append({sub, obj})
+
+    for i in range(len(nodes_per_triple)):
+        for j in range(i + 1, len(nodes_per_triple)):
+            if nodes_per_triple[i] & nodes_per_triple[j]:
+                return True
+    return False
+
+
+def default_multi_hop(reason="insufficient_connected_triples"):
+    """Canonical placeholder when multi-hop is not possible from provided triples."""
+    return {
+        "question": None,
+        "answer": None,
+        "chain": None,
+        "status": reason,
+    }
+
+
+def build_prompt(entry, allow_multihop):
     """Build the prompt sent to Gemini for a given dataset entry"""
     triples_str = "\n".join(
         f"- ({t['sub']}, {t['rel']}, {t['obj']})"
         for t in entry["triples"] # format each triple as (subject, relation, object)
     )
 
-    # ask Gemini to generate 4 types of questions based strictly on the sentence and triples
-    # 2 text-based (single-hop and multi-hop) + 2 graph-based (single-hop and multi-hop)
+    # ask Gemini to generate grounded questions based strictly on sentence + triples
+    multi_hop_policy = """
+Generate exactly 4 questions based STRICTLY on the data above. No external knowledge.
+
+1. TEXT_SINGLE_HOP: simple question, answer from the sentence, 1 fact only.
+2. TEXT_MULTI_HOP: complex question, answer requires combining 2+ facts from the sentence.
+3. GRAPH_SINGLE_HOP: simple question, answer from exactly 1 triple.
+4. GRAPH_MULTI_HOP: complex question, answer requires traversing 2+ connected triples.
+
+For multi-hop questions, add a "chain" field showing reasoning steps using -> between each hop.
+""" if allow_multihop else """
+Generate questions based STRICTLY on the data above. No external knowledge.
+
+Required:
+1. TEXT_SINGLE_HOP: simple question, answer from the sentence, 1 fact only.
+2. GRAPH_SINGLE_HOP: simple question, answer from exactly 1 triple.
+
+Do NOT create multi-hop questions for this entry because the triples do not contain enough connected facts.
+Set both text_multi_hop and graph_multi_hop to null fields exactly as shown in the output schema.
+"""
+
     return f"""You are an expert in Knowledge Graph Question Answering.
 
 Here is a real knowledge graph entry.
@@ -33,29 +153,39 @@ Sentence: "{entry['sent']}"
 Triples:
 {triples_str}
 
-Generate exactly 4 questions based STRICTLY on the data above. No external knowledge.
+{multi_hop_policy}
 
-1. TEXT_SINGLE_HOP: simple question, answer from the sentence, 1 fact only.
-2. TEXT_MULTI_HOP: complex question, answer requires combining 2+ facts from the sentence.
-3. GRAPH_SINGLE_HOP: simple question, answer from exactly 1 triple.
-4. GRAPH_MULTI_HOP: complex question, answer requires traversing 2+ connected triples.
-
-For multi-hop questions, add a "chain" field showing reasoning steps using → between each hop.
+Important grounding constraints:
+- For graph questions, use only entities and relations that explicitly appear in the triples list.
+- Never use world knowledge that is not present in the sentence or triples.
+- If an answer is not directly supported by the provided data, do not invent it.
 
 Output ONLY valid JSON, no explanation, no markdown:
 {{
   "text_single_hop": {{"question": "...", "answer": "..."}},
-  "text_multi_hop": {{"question": "...", "answer": "...", "chain": "..."}},
+    "text_multi_hop": {{"question": null, "answer": null, "chain": null}},
   "graph_single_hop": {{"question": "...", "answer": "..."}},
-  "graph_multi_hop": {{"question": "...", "answer": "...", "chain": "..."}}
+    "graph_multi_hop": {{"question": null, "answer": null, "chain": null}}
 }}"""
 
 
 def call_gemini(prompt, max_retries=3):
     """Send the prompt to Gemini and return the parsed JSON response"""
     for attempt in range(max_retries):
+        client_idx, wait_time = _reserve_next_client_slot()
+        if client_idx is None:
+            print(f"  [✗] All API keys reached daily limit ({PER_KEY_DAILY_LIMIT}/day per key)")
+            return None
+
+        if wait_time and wait_time > 0:
+            time.sleep(wait_time)
+
+        # Count the reserved call now to stay conservative with free-tier quotas.
+        _key_last_call_ts[client_idx] = time.time()
+        _key_calls_today[client_idx] += 1
+
         try:
-            response = client.models.generate_content(
+            response = clients[client_idx].models.generate_content(
                 model="gemini-2.5-flash",
                 contents=prompt
             )
@@ -87,15 +217,18 @@ def generate_questions(entries, dataset_name):
     for i, entry in enumerate(entries):
         print(f"  [{i+1}/{total}] {entry['id']} ({entry['category']})")
 
-        prompt = build_prompt(entry) # build the prompt for this entry
-
-        # respect free-tier rate limit (10 req/min) — wait 7s between each call
-        if i > 0:
-            time.sleep(7)
+        allow_multihop = has_connected_multihop(entry["triples"])
+        prompt = build_prompt(entry, allow_multihop) # build the prompt for this entry
 
         questions = call_gemini(prompt)
         if questions is None: # skip entry if all retries failed
             continue
+
+        text_multi_hop = questions.get("text_multi_hop", {})
+        graph_multi_hop = questions.get("graph_multi_hop", {})
+        if not allow_multihop:
+            text_multi_hop = default_multi_hop()
+            graph_multi_hop = default_multi_hop()
 
         results.append({
             "id":               f"{dataset_name}_{i+1:03d}", # unique id for the generated entry
@@ -105,9 +238,9 @@ def generate_questions(entries, dataset_name):
             "original_sent":    entry["sent"],                # original sentence used to generate questions
             "original_triples": entry["triples"],             # knowledge graph triples used to generate questions
             "text_single_hop":  questions.get("text_single_hop", {}),
-            "text_multi_hop":   questions.get("text_multi_hop", {}),
+            "text_multi_hop":   text_multi_hop,
             "graph_single_hop": questions.get("graph_single_hop", {}),
-            "graph_multi_hop":  questions.get("graph_multi_hop", {}),
+            "graph_multi_hop":  graph_multi_hop,
         })
 
     return results
