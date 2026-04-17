@@ -117,51 +117,56 @@ def default_multi_hop(reason="insufficient_connected_triples"):
 
 
 def build_prompt(entry, allow_multihop):
-    """Build the prompt sent to Gemini for graph-only question generation."""
     triples_str = "\n".join(
         f"- ({t['sub']}, {t['rel']}, {t['obj']})"
-        for t in entry["triples"] # format each triple as (subject, relation, object)
+        for t in entry["triples"]
     )
 
-    # Ask Gemini to generate grounded graph questions only.
-    multi_hop_policy = """
-Generate exactly 2 graph questions based STRICTLY on the triples above. No external knowledge.
+    if allow_multihop:
+        task_instructions = """Generate exactly 2 questions based STRICTLY on the triples above.
 
-1. GRAPH_SINGLE_HOP: simple question, answer from exactly 1 triple.
-2. GRAPH_MULTI_HOP: complex question, answer requires traversing 2+ connected triples.
+1. GRAPH_SINGLE_HOP: a question answerable using exactly ONE triple.
+   - The answer must be the object or subject of a single triple.
 
-For multi-hop questions, add a "chain" field showing reasoning steps using -> between each hop.
-""" if allow_multihop else """
-Generate graph questions based STRICTLY on the triples above. No external knowledge.
+2. GRAPH_MULTI_HOP: a question requiring traversal of AT LEAST 2 connected triples.
+   - Two triples are "connected" if the object of one equals the subject of another.
+   - Add a "chain" field showing each hop as: entity1 -[relation]-> entity2 -> ...
+   - The answer must only be reachable by following this chain."""
 
-Required:
-1. GRAPH_SINGLE_HOP: simple question, answer from exactly 1 triple.
+        output_schema = """{
+  "graph_single_hop": {"question": "...", "answer": "..."},
+  "graph_multi_hop": {"question": "...", "answer": "...", "chain": "entity -[rel]-> entity -[rel]-> answer"}
+}"""
+    else:
+        task_instructions = """Generate exactly 1 question based STRICTLY on the triples above.
 
-Do NOT create multi-hop questions for this entry because the triples do not contain enough connected facts.
-Set graph_multi_hop to null fields exactly as shown in the output schema.
-"""
+1. GRAPH_SINGLE_HOP: a question answerable using exactly ONE triple.
+   - The answer must be the object or subject of a single triple.
+
+Do NOT generate a multi-hop question. The triples do not contain enough connected facts for multi-hop reasoning."""
+
+        output_schema = """{
+  "graph_single_hop": {"question": "...", "answer": "..."},
+  "graph_multi_hop": null
+}"""
 
     return f"""You are an expert in Knowledge Graph Question Answering.
 
-Here is a real knowledge graph entry.
-
-Sentence: "{entry['sent']}"
+Here is a knowledge graph entry with its associated triples.
 
 Triples:
 {triples_str}
 
-{multi_hop_policy}
+{task_instructions}
 
-Important grounding constraints:
-- For graph questions, use only entities and relations that explicitly appear in the triples list.
-- Never use world knowledge that is not present in the sentence or triples.
-- If an answer is not directly supported by the provided data, do not invent it.
+Grounding rules (STRICT):
+- Use ONLY entities and relations that explicitly appear in the triples above.
+- Do NOT use world knowledge not present in the triples.
+- Do NOT invent entities, relations, or answers.
+- Every answer must be directly traceable to one or more triples.
 
 Output ONLY valid JSON, no explanation, no markdown:
-{{
-  "graph_single_hop": {{"question": "...", "answer": "..."}},
-    "graph_multi_hop": {{"question": null, "answer": null, "chain": null}}
-}}"""
+{output_schema}"""
 
 
 def call_gemini(prompt, max_retries=3):
