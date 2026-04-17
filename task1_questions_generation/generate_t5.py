@@ -82,8 +82,8 @@ def save_results(results, output_path):
 PROJECT_ROOT = Path(__file__).parent.parent
 load_dotenv(PROJECT_ROOT / ".env") # load env variables (dataset paths, etc.)
 
-OUTPUT_DIR  = "output_questions"
-SAMPLES_PER_DATASET = 100
+OUTPUT_DIR  = Path(__file__).parent / "output_questions"
+SAMPLES_PER_DATASET = 50
 lettria_dir = PROJECT_ROOT / os.getenv("LETTRIA_DIR") # path to LettrIA dataset
 oskgc_dir   = PROJECT_ROOT / os.getenv("OSKGC_DIR")   # path to OSKGC dataset
 

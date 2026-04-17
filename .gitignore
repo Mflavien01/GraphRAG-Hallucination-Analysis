@@ -1,6 +1,7 @@
 /data
 /lib
 output_questions/
+**/output/
 *.html
 *.env
 *.txt

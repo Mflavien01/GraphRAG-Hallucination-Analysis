@@ -169,9 +169,16 @@ Output ONLY valid JSON, no explanation, no markdown:
 {output_schema}"""
 
 
-def call_gemini(prompt, max_retries=3):
+MODELS_FALLBACK = ["gemini-2.0-flash", "gemini-1.5-flash"]
+
+
+def call_gemini(prompt, max_retries=5):
     """Send the prompt to Gemini and return the parsed JSON response"""
+    models_to_try = ["gemini-2.5-flash"] + MODELS_FALLBACK
+
     for attempt in range(max_retries):
+        model = models_to_try[min(attempt, len(models_to_try) - 1)]
+
         client_idx, wait_time = _reserve_next_client_slot()
         if client_idx is None:
             print(f"  [✗] All API keys reached daily limit ({PER_KEY_DAILY_LIMIT}/day per key)")
@@ -186,7 +193,7 @@ def call_gemini(prompt, max_retries=3):
 
         try:
             response = clients[client_idx].models.generate_content(
-                model="gemini-2.5-flash",
+                model=model,
                 contents=prompt
             )
             raw_text = response.text.strip()
@@ -196,16 +203,19 @@ def call_gemini(prompt, max_retries=3):
                 lines = raw_text.split("\n")
                 raw_text = "\n".join(lines[1:-1])
 
-            return json.loads(raw_text) # parse the JSON response
+            return json.loads(raw_text)
 
         except json.JSONDecodeError:
-            print(f"  [!] Invalid JSON (attempt {attempt + 1}/{max_retries})")
-            time.sleep(2) # wait before retrying
+            print(f"  [!] Invalid JSON on {model} (attempt {attempt + 1}/{max_retries})")
+            time.sleep(2)
         except Exception as e:
-            print(f"  [!] API error: {e} (attempt {attempt + 1}/{max_retries})")
-            time.sleep(5) # longer wait on API error (rate limit, network, etc.)
+            is_503 = "503" in str(e) or "UNAVAILABLE" in str(e)
+            backoff = min(30 * (2 ** attempt), 120) if is_503 else 5
+            next_model = models_to_try[min(attempt + 1, len(models_to_try) - 1)]
+            print(f"  [!] {model} error (attempt {attempt + 1}/{max_retries}), retrying with {next_model} in {backoff}s: {e}")
+            time.sleep(backoff)
 
-    print("  [✗] Failed after 3 attempts")
+    print("  [✗] Failed after all attempts")
     return None
 
 
@@ -252,8 +262,8 @@ def save_results(results, output_path):
 
 
 
-OUTPUT_DIR = "output_questions"
-SAMPLES_PER_DATASET = 100
+OUTPUT_DIR = Path(__file__).parent / "output_questions"
+SAMPLES_PER_DATASET = 50
 
 print("DATASET: LettrIA")
 lettria_sample = sample_proportional(load_lettria(lettria_dir), SAMPLES_PER_DATASET)
