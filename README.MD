@@ -10,7 +10,7 @@ benchmarks.
 **Authors:** Flavien Mathieu, Raphael Partouche
 **Supervisors:** Raphael Troncy, Pasquale Lisena, Carmelle Meli Songuon, Thibault Ehrhart
 
-
+---
 
 ## Project overview
 
@@ -26,7 +26,7 @@ The project is structured in three sequential tasks:
    evaluate them quantitatively with the MIRAGE framework, and categorise the
    hallucinations qualitatively.
 
-
+---
 
 ## Repository structure
 .
@@ -45,7 +45,7 @@ The project is structured in three sequential tasks:
 ├── output_questions/               # Generated QA pairs (gitignored)
 └── .env                            # Local paths and API keys (not committed)
 
-
+---
 
 ## Setup
 
@@ -121,7 +121,7 @@ GEMINI_PER_KEY_RPM=5
 GEMINI_PER_KEY_DAILY_LIMIT=20
 ```
 
-
+---
 
 ## Usage
 
@@ -156,7 +156,7 @@ Both scripts produce one `.jsonl` file per dataset in `output_questions/`,
 containing 100 entries each. Each line carries the originating sentence, the
 originating triples, and the generated question(s).
 
-
+---
 
 ## References
 
