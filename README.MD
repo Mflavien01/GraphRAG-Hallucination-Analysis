@@ -29,6 +29,8 @@ The project is structured in three sequential tasks:
 ---
 
 ## Repository structure
+
+```
 .
 ├── data/                           # Datasets (gitignored, see below)
 │   ├── Text2KGBench_LettrIA/
@@ -45,7 +47,7 @@ The project is structured in three sequential tasks:
 ├── output_questions/               # Generated QA pairs (gitignored)
 └── .env                            # Local paths and API keys (not committed)
 
----
+~~~
 
 ## Setup
 
