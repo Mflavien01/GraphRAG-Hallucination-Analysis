@@ -3,86 +3,18 @@ import os
 import time
 from pathlib import Path
 from dotenv import load_dotenv
-from google import genai
+from openai import OpenAI
 
 from data_loader import load_lettria, load_oskgc, sample_proportional
 
 PROJECT_ROOT = Path(__file__).parent.parent
 load_dotenv(PROJECT_ROOT / ".env") # load env variables (API key, dataset paths)
 
+api_key = os.getenv("OPENAI_API_KEY", "").strip()
+if not api_key:
+    raise ValueError("No OpenAI API key found. Set OPENAI_API_KEY in .env")
 
-def load_gemini_clients():
-    """Load one or many Gemini API keys from env and return initialized clients."""
-    keys = []
-
-    # Preferred format: GEMINI_API_KEYS="key1,key2,key3"
-    keys_csv = os.getenv("GEMINI_API_KEYS", "").strip()
-    if keys_csv:
-        keys.extend([k.strip() for k in keys_csv.split(",") if k.strip()])
-
-    # Backward compatible: GEMINI_API_KEY="single_key"
-    single_key = os.getenv("GEMINI_API_KEY", "").strip()
-    if single_key and single_key not in keys:
-        keys.append(single_key)
-
-    if not keys:
-        raise ValueError("No Gemini API key found. Set GEMINI_API_KEY or GEMINI_API_KEYS in .env")
-
-    return [genai.Client(api_key=k) for k in keys]
-
-
-clients = load_gemini_clients()
-
-# Free tier constraints can be tuned from env if needed.
-PER_KEY_RPM = max(1, int(os.getenv("GEMINI_PER_KEY_RPM", "5")))
-PER_KEY_DAILY_LIMIT = max(1, int(os.getenv("GEMINI_PER_KEY_DAILY_LIMIT", "20")))
-MIN_SECONDS_BETWEEN_CALLS = 60.0 / PER_KEY_RPM
-
-_key_last_call_ts = [0.0] * len(clients)
-_key_calls_today = [0] * len(clients)
-_current_day = time.strftime("%Y-%m-%d")
-_next_client_idx = 0
-
-
-def _reset_daily_counters_if_needed():
-    global _current_day, _key_calls_today
-    today = time.strftime("%Y-%m-%d")
-    if today != _current_day:
-        _current_day = today
-        _key_calls_today = [0] * len(clients)
-
-
-def _reserve_next_client_slot():
-    """Pick the next available client using round-robin + rate/daily limits."""
-    global _next_client_idx
-
-    _reset_daily_counters_if_needed()
-    now = time.time()
-
-    best_idx = None
-    best_wait = None
-
-    for offset in range(len(clients)):
-        idx = (_next_client_idx + offset) % len(clients)
-
-        if _key_calls_today[idx] >= PER_KEY_DAILY_LIMIT:
-            continue
-
-        wait = max(0.0, MIN_SECONDS_BETWEEN_CALLS - (now - _key_last_call_ts[idx]))
-        if wait == 0.0:
-            _next_client_idx = (idx + 1) % len(clients)
-            return idx, 0.0
-
-        if best_wait is None or wait < best_wait:
-            best_idx = idx
-            best_wait = wait
-
-    if best_idx is not None:
-        _next_client_idx = (best_idx + 1) % len(clients)
-        return best_idx, best_wait
-
-    return None, None
-
+client = OpenAI(api_key=api_key)
 
 lettria_dir = PROJECT_ROOT / os.getenv("LETTRIA_DIR") # path to LettrIA dataset
 oskgc_dir   = PROJECT_ROOT / os.getenv("OSKGC_DIR")   # path to OSKGC dataset
@@ -116,103 +48,103 @@ def default_multi_hop(reason="insufficient_connected_triples"):
     }
 
 
+SYSTEM_MSG = (
+    "You are an expert in Knowledge Graph Question Answering.\n"
+    "Your task is to generate grounded questions strictly from provided knowledge graph triples.\n"
+    "Never use external knowledge."
+)
+
+USER_MSG_TEMPLATE = """Here is a knowledge graph entry.
+
+Example:
+Triples:
+- (Paris, capital_of, France)
+- (France, continent, Europe)
+
+Output:
+{{
+  "graph_single_hop": {{"question": "What is Paris the capital of?", "answer": "France"}},
+  "graph_multi_hop": {{"question": "On which continent is the country whose capital is Paris?", "answer": "Europe", "chain": "Paris -[capital_of]-> France -[continent]-> Europe"}}
+}}
+
+Now process this entry:
+
+Triples:
+{triples}
+
+Generate exactly 2 questions based STRICTLY on the triples above. No external knowledge.
+
+1. GRAPH_SINGLE_HOP: simple question, answer from exactly 1 triple.
+2. GRAPH_MULTI_HOP: complex question, answer requires traversing 2+ connected triples.
+   Chain format: EntityA -[relation1]-> EntityB -[relation2]-> EntityC
+
+Grounding rules:
+- Use ONLY entities and relations that explicitly appear in the triples above.
+- Never use world knowledge not present in the triples.
+- Every answer must be directly traceable to one or more triples.
+
+Output ONLY valid JSON, no explanation, no markdown:
+{{
+  "graph_single_hop": {{"question": "...", "answer": "..."}},
+  "graph_multi_hop": {{"question": "...", "answer": "...", "chain": "..."}}
+}}"""
+
+USER_MSG_SINGLE_ONLY_TEMPLATE = """Here is a knowledge graph entry.
+
+Triples:
+{triples}
+
+Generate exactly 1 question based STRICTLY on the triples above. No external knowledge.
+
+1. GRAPH_SINGLE_HOP: simple question, answer from exactly 1 triple.
+
+Grounding rules:
+- Use ONLY entities and relations that explicitly appear in the triples above.
+- Never use world knowledge not present in the triples.
+- Every answer must be directly traceable to one or more triples.
+
+Output ONLY valid JSON, no explanation, no markdown:
+{{
+  "graph_single_hop": {{"question": "...", "answer": "..."}},
+  "graph_multi_hop": null
+}}"""
+
+
 def build_prompt(entry, allow_multihop):
     triples_str = "\n".join(
         f"- ({t['sub']}, {t['rel']}, {t['obj']})"
         for t in entry["triples"]
     )
-
-    if allow_multihop:
-        task_instructions = """Generate exactly 2 questions based STRICTLY on the triples above.
-
-1. GRAPH_SINGLE_HOP: a question answerable using exactly ONE triple.
-   - The answer must be the object or subject of a single triple.
-
-2. GRAPH_MULTI_HOP: a question requiring traversal of AT LEAST 2 connected triples.
-   - Two triples are "connected" if the object of one equals the subject of another.
-   - Add a "chain" field showing each hop as: entity1 -[relation]-> entity2 -> ...
-   - The answer must only be reachable by following this chain."""
-
-        output_schema = """{
-  "graph_single_hop": {"question": "...", "answer": "..."},
-  "graph_multi_hop": {"question": "...", "answer": "...", "chain": "entity -[rel]-> entity -[rel]-> answer"}
-}"""
-    else:
-        task_instructions = """Generate exactly 1 question based STRICTLY on the triples above.
-
-1. GRAPH_SINGLE_HOP: a question answerable using exactly ONE triple.
-   - The answer must be the object or subject of a single triple.
-
-Do NOT generate a multi-hop question. The triples do not contain enough connected facts for multi-hop reasoning."""
-
-        output_schema = """{
-  "graph_single_hop": {"question": "...", "answer": "..."},
-  "graph_multi_hop": null
-}"""
-
-    return f"""You are an expert in Knowledge Graph Question Answering.
-
-Here is a knowledge graph entry with its associated triples.
-
-Triples:
-{triples_str}
-
-{task_instructions}
-
-Grounding rules (STRICT):
-- Use ONLY entities and relations that explicitly appear in the triples above.
-- Do NOT use world knowledge not present in the triples.
-- Do NOT invent entities, relations, or answers.
-- Every answer must be directly traceable to one or more triples.
-
-Output ONLY valid JSON, no explanation, no markdown:
-{output_schema}"""
+    template = USER_MSG_TEMPLATE if allow_multihop else USER_MSG_SINGLE_ONLY_TEMPLATE
+    return SYSTEM_MSG, template.format(triples=triples_str)
 
 
-MODELS_FALLBACK = ["gemini-2.0-flash", "gemini-1.5-flash"]
-
-
-def call_gemini(prompt, max_retries=5):
-    """Send the prompt to Gemini and return the parsed JSON response"""
-    models_to_try = ["gemini-2.5-flash"] + MODELS_FALLBACK
-
+def call_gpt4(system_msg, user_msg, max_retries=5):
+    """Send the prompt to GPT-4 and return the parsed JSON response."""
     for attempt in range(max_retries):
-        model = models_to_try[min(attempt, len(models_to_try) - 1)]
-
-        client_idx, wait_time = _reserve_next_client_slot()
-        if client_idx is None:
-            print(f"  [✗] All API keys reached daily limit ({PER_KEY_DAILY_LIMIT}/day per key)")
-            return None
-
-        if wait_time and wait_time > 0:
-            time.sleep(wait_time)
-
-        # Count the reserved call now to stay conservative with free-tier quotas.
-        _key_last_call_ts[client_idx] = time.time()
-        _key_calls_today[client_idx] += 1
-
         try:
-            response = clients[client_idx].models.generate_content(
-                model=model,
-                contents=prompt
+            response = client.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {"role": "system", "content": system_msg},
+                    {"role": "user",   "content": user_msg},
+                ],
+                temperature=0,
             )
-            raw_text = response.text.strip()
+            raw_text = response.choices[0].message.content.strip()
 
             if raw_text.startswith("```"):
-                # sometimes Gemini wraps the JSON in a markdown code block, strip it
                 lines = raw_text.split("\n")
                 raw_text = "\n".join(lines[1:-1])
 
             return json.loads(raw_text)
 
         except json.JSONDecodeError:
-            print(f"  [!] Invalid JSON on {model} (attempt {attempt + 1}/{max_retries})")
+            print(f"  [!] Invalid JSON (attempt {attempt + 1}/{max_retries})")
             time.sleep(2)
         except Exception as e:
-            is_503 = "503" in str(e) or "UNAVAILABLE" in str(e)
-            backoff = min(30 * (2 ** attempt), 120) if is_503 else 5
-            next_model = models_to_try[min(attempt + 1, len(models_to_try) - 1)]
-            print(f"  [!] {model} error (attempt {attempt + 1}/{max_retries}), retrying with {next_model} in {backoff}s: {e}")
+            backoff = min(10 * (2 ** attempt), 60)
+            print(f"  [!] GPT-4 error (attempt {attempt + 1}/{max_retries}), retrying in {backoff}s: {e}")
             time.sleep(backoff)
 
     print("  [✗] Failed after all attempts")
@@ -228,9 +160,9 @@ def generate_questions(entries, dataset_name):
         print(f"  [{i+1}/{total}] {entry['id']} ({entry['category']})")
 
         allow_multihop = has_connected_multihop(entry["triples"])
-        prompt = build_prompt(entry, allow_multihop) # build the prompt for this entry
+        system_msg, user_msg = build_prompt(entry, allow_multihop)
 
-        questions = call_gemini(prompt)
+        questions = call_gpt4(system_msg, user_msg)
         if questions is None: # skip entry if all retries failed
             continue
 

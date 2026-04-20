@@ -42,7 +42,7 @@ The project is structured in three sequential tasks:
 ├── task1_questions_generation/     # Task 1: question generation
 │   ├── data_loader.py              #   common dataset loaders + proportional sampler
 │   ├── generate_t5.py              #   text-based QG with valhalla/t5-small-qa-qg-hl
-│   └── generate_llm.py             #   graph-based QG with Gemini 2.5 Flash
+│   └── generate_llm.py             #   graph-based QG with GPT-4o
 ├── task2_setup_rag/                # Task 2: RAG / GraphRAG pipelines (in progress)
 ├── output_questions/               # Generated QA pairs (gitignored)
 └── .env                            # Local paths and API keys (not committed)
@@ -68,7 +68,7 @@ The main dependencies are :
 
 - `transformers` 
 - `torch`
-- `google-genai`
+- `openai`
 - `pandas`
 - `numpy`
 - `python-dotenv`
@@ -115,13 +115,8 @@ Create a `.env` file at the root of the repository:
 LETTRIA_DIR=data/Text2KGBench_LettrIA
 OSKGC_DIR=data/OSKGC/benchmark/data/dev
 
-# Gemini API (single key or comma-separated list)
-GEMINI_API_KEY=your_key_here
-
-
-# Optional: free-tier rate limits
-GEMINI_PER_KEY_RPM=5
-GEMINI_PER_KEY_DAILY_LIMIT=20
+# OpenAI API
+OPENAI_API_KEY=your_key_here
 ```
 
 ## Usage
@@ -146,8 +141,7 @@ Generate text-based questions with the fine-tuned T5 model:
 python task1_questions_generation/generate_t5.py
 ```
 
-Generate graph-based questions with Gemini 2.5 Flash (requires a valid API key
-in `.env`):
+Generate graph-based questions with GPT-4o (requires a valid API key in `.env`):
 
 ```bash
 python task1_questions_generation/generate_llm.py
