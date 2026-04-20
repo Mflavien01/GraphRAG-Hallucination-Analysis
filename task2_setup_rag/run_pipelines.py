@@ -26,7 +26,7 @@ sys.path.append(str(_base / "llm"))
 run_rag      = _load_module("rag_pipeline",     _base / "rag"       / "pipeline.py").run_rag
 run_graphrag = _load_module("graphrag_pipeline", _base / "graph-rag" / "pipeline.py").run_graphrag
 
-from llm_interface import PlaceholderLLM
+from llm_interface import QwenLLM
 
 
 # ── JSON encoder to handle numpy types (e.g. float32 in RAG context/distances) ─
@@ -120,7 +120,7 @@ def run_and_save(questions, pipeline_fn, llm, output_file, pipeline_name):
 
 # ── main ────────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
-    llm = PlaceholderLLM()
+    llm = QwenLLM(token=os.getenv("HF_TOKEN"))
 
     questions_t5 = load_questions_t5(QUESTIONS_DIR / "questions_t5_lettria.jsonl")
     questions_t5 += load_questions_t5(QUESTIONS_DIR / "questions_t5_oskgc.jsonl")
@@ -133,11 +133,11 @@ if __name__ == "__main__":
             questions_llm += load_questions_llm(fpath)
     print(f"Loaded {len(questions_llm)} LLM graph questions")
 
-    if not questions_llm:
-        print("No LLM graph questions found — skipping pipelines.")
-        sys.exit(0)
-
     all_questions = questions_t5 + questions_llm
+
+    if not all_questions:
+        print("No questions found — aborting.")
+        sys.exit(1)
 
     run_and_save(all_questions, run_rag,      llm, OUTPUT_DIR / "rag_results.jsonl",      "RAG")
     run_and_save(all_questions, run_graphrag,  llm, OUTPUT_DIR / "graphrag_results.jsonl", "GraphRAG")
