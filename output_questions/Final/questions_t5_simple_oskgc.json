@@ -1,0 +1,502 @@
+[
+  {
+    "sentence": "Alexandria (Indiana) has a population density of 755.3 inhabitants per square kilometre.",
+    "question": "What is Alexandria's population density?",
+    "answer": "755.3 inhabitants per square kilometre"
+  },
+  {
+    "sentence": "Abilene (Texas) is part of Taylor County (Texas).",
+    "question": "What city is part of Taylor County?",
+    "answer": "Abilene"
+  },
+  {
+    "sentence": "Abilene (Texas) is part of Taylor County (Texas).",
+    "question": "Abilene is a member of what county?",
+    "answer": "Taylor County"
+  },
+  {
+    "sentence": "Crew member William Anders and backup pilot Buzz Aldrin served under commander Frank Borman on Apollo 8.",
+    "question": "Who served under the commander of Apollo 8 as a crew member?",
+    "answer": "William Anders"
+  },
+  {
+    "sentence": "The creators of Blockbuster (comics character) are Gardner Fox and Tom Lyle.",
+    "question": "Who are the creators of Blockbuster?",
+    "answer": "Gardner Fox and Tom Lyle"
+  },
+  {
+    "sentence": "Olga Bondareva was given the birth name \"Olga Nikolaevna Bondareva\".",
+    "question": "Who was given the birth name of Olga Nikolaevna Bondareva?",
+    "answer": "Olga Bondareva"
+  },
+  {
+    "sentence": "Olga Bondareva was given the birth name \"Olga Nikolaevna Bondareva\".",
+    "question": "What was the birth name of Olga Bondareva?",
+    "answer": "Olga Nikolaevna Bondareva"
+  },
+  {
+    "sentence": "Atlanta is part of Fulton County (Georgia), United States.",
+    "question": "What county is Atlanta part of?",
+    "answer": "Fulton County"
+  },
+  {
+    "sentence": "Ahmet Davutoğlu is the President of Turkey. The Atatürk Monument (İzmir) is located in Turkey.",
+    "question": "In which country, led by Ahmet Davutoğlu, is the Atatürk Monument located?",
+    "answer": "Turkey"
+  },
+  {
+    "sentence": "The 18L/36R runway in Allama Iqbal International airport in Pakistan, has a length of 3310.",
+    "question": "What is the length of the runway in the Allama Iqbal International airport located in Pakistan?",
+    "answer": "3310"
+  },
+  {
+    "sentence": "The 18L/36R runway in Allama Iqbal International airport in Pakistan, has a length of 3310.",
+    "question": "What runway in Allama Iqbal International airport has a length of 3310?",
+    "answer": "18L/36R"
+  },
+  {
+    "sentence": "Aaron Turner played with the band Twilight.",
+    "question": "Who played with Twilight?",
+    "answer": "Aaron Turner"
+  },
+  {
+    "sentence": "Aaron Turner played with the band Twilight.",
+    "question": "What band did Aaron Turner play with?",
+    "answer": "Twilight"
+  },
+  {
+    "sentence": "Manila is Chinabank’s founding place.",
+    "question": "What is Chinabank's founding place?",
+    "answer": "Manila"
+  },
+  {
+    "sentence": "107 Camilla was discovered by the British N. R. Pogson who later died in Chennai.",
+    "question": "Where did the discoverer of 107 Camilla die?",
+    "answer": "Chennai"
+  },
+  {
+    "sentence": "107 Camilla was discovered by the British N. R. Pogson who later died in Chennai.",
+    "question": "Who discovered Camilla?",
+    "answer": "N. R. Pogson"
+  },
+  {
+    "sentence": "Abraham A. Ribicoff died in the United States.",
+    "question": "Who died in the United States?",
+    "answer": "Ribicoff"
+  },
+  {
+    "sentence": "The Mason School of Business is located in the United States, and are the current tenants of Alan B. Miller Hall.",
+    "question": "What school is located in the United States and is the current tenant of Alan B. Miller Hall?",
+    "answer": "The Mason School of Business"
+  },
+  {
+    "sentence": "The Mason School of Business is located in the United States, and are the current tenants of Alan B. Miller Hall.",
+    "question": "The Mason School of Business is located in what building?",
+    "answer": "Miller Hall"
+  },
+  {
+    "sentence": "The Atatürk Monument (İzmir) was inaugurated on 27th July, 1932.",
+    "question": "When was the Atatürk Monument inaugurated?",
+    "answer": "27th July, 1932"
+  },
+  {
+    "sentence": "The inauguration date for the Atatürk Monument (İzmir), made of bronze, is 1932-07-27.",
+    "question": "What is the date of the inauguration of the Atatürk Monument?",
+    "answer": "1932-07-27"
+  },
+  {
+    "sentence": "The record labels of the Year of No Light album Nord's in post-metal genre are Crucial Blast and E-Vinyl.",
+    "question": "What are the record labels of the Year of No Light album?",
+    "answer": "Crucial Blast and E-Vinyl"
+  },
+  {
+    "sentence": "The record labels of the Year of No Light album Nord's in post-metal genre are Crucial Blast and E-Vinyl.",
+    "question": "What is the name of the post-metal album released by Crucial Blast and E-Vinyl?",
+    "answer": "Year of No Light"
+  },
+  {
+    "sentence": "Jazz musician Alison O'Donnell is signed with Static Caravan Recordings. Jazz is the origin of Funk.",
+    "question": "Who signed the musician performing the music genre that originated Funk?",
+    "answer": "Static Caravan Recordings"
+  },
+  {
+    "sentence": "Jazz musician Alison O'Donnell is signed with Static Caravan Recordings. Jazz is the origin of Funk.",
+    "question": "What is jazz the origin of?",
+    "answer": "Funk"
+  },
+  {
+    "sentence": "Harold French was the director of the 89 minute film English Without Tears, where Nicholas Brodszky was the music composer.",
+    "question": "Who was the music composer of the 89 minute film directed by Harold French?",
+    "answer": "Nicholas Brodszky"
+  },
+  {
+    "sentence": "Harold French was the director of the 89 minute film English Without Tears, where Nicholas Brodszky was the music composer.",
+    "question": "Who was the director of English Without Tears?",
+    "answer": "Harold French"
+  },
+  {
+    "sentence": "Aarhus has a magistrate government. To its northeast is Mols. The Aarhus University is located in Aarhus.",
+    "question": "In what city with a magistrate government is Aarhus University located?",
+    "answer": "Aarhus"
+  },
+  {
+    "sentence": "Aarhus has a magistrate government. To its northeast is Mols. The Aarhus University is located in Aarhus.",
+    "question": "What city has a magistrate government?",
+    "answer": "Aarhus"
+  },
+  {
+    "sentence": "The rotation period of (66391) 1999 KW4 is 9953.28.",
+    "question": "What is the rotation period of 1999 KW4?",
+    "answer": "9953.28"
+  },
+  {
+    "sentence": "Terence Rattigan died on the 30th of November in the year 1977.",
+    "question": "Who died on November 30, 1977?",
+    "answer": "Terence Rattigan"
+  },
+  {
+    "sentence": "Altar of Plagues is a band associated with Year of No Light which produced the album Nord.",
+    "question": "What is the name of the band, associated with Altar of Plagues, that produced the album Nord?",
+    "answer": "Year of No Light"
+  },
+  {
+    "sentence": "Aaron Turner plays electroacoustic music and is a singer.",
+    "question": "Who plays electroacoustic music?",
+    "answer": "Aaron Turner"
+  },
+  {
+    "sentence": "Aaron Turner plays electroacoustic music and is a singer.",
+    "question": "What type of music does Aaron Turner play?",
+    "answer": "electroacoustic"
+  },
+  {
+    "sentence": "103 Colmore Row was designed by the architect, John Madin.",
+    "question": "What was the name of the building that was designed by John Madin?",
+    "answer": "103 Colmore Row"
+  },
+  {
+    "sentence": "103 Colmore Row was designed by the architect, John Madin.",
+    "question": "Who designed 103 Colmore Row?",
+    "answer": "John Madin"
+  },
+  {
+    "sentence": "Alpena County Regional Airport is found in Wilson Township (Alpena County, Michigan)",
+    "question": "Where is Alpena County Regional Airport located?",
+    "answer": "Wilson Township"
+  },
+  {
+    "sentence": "Akeem Ayers' former team was the Los Angeles Rams who play in their home city at Los Angeles Memorial Coliseum.",
+    "question": "Where does Akeem Ayers' former team play their home games?",
+    "answer": "Los Angeles Memorial Coliseum"
+  },
+  {
+    "sentence": "Anatole de Grunwald's English Without tears cinematography was done by Bernard Knowles.",
+    "question": "Who did the cinematography for Anatole de Grunwald's English Without Tears?",
+    "answer": "Bernard Knowles"
+  },
+  {
+    "sentence": "William Anders is a fighter pilot and member of Apollo 8's crew.",
+    "question": "Who is a fighter pilot?",
+    "answer": "William Anders"
+  },
+  {
+    "sentence": "The 1955 Dodge is a convertible with a 230 cubic inch engine.",
+    "question": "What is the engine of the 1955 Dodge?",
+    "answer": "230 cubic inch"
+  },
+  {
+    "sentence": "The 1955 Dodge is a convertible with a 230 cubic inch engine.",
+    "question": "What is the name of the convertible with 230 cubic inch engine?",
+    "answer": "1955 Dodge"
+  },
+  {
+    "sentence": "A.C. Chievo Verona is playing in his ground at Verona.",
+    "question": "Who is playing at Verona?",
+    "answer": "Chievo Verona"
+  },
+  {
+    "sentence": "There are 16800 undergraduate with 9400 post-graduate students at the University of Burgundy.",
+    "question": "How many undergraduate students are at the University of Burgundy?",
+    "answer": "16800"
+  },
+  {
+    "sentence": "There are 16800 undergraduate with 9400 post-graduate students at the University of Burgundy.",
+    "question": "How many post-graduate students are at the University of Burgundy?",
+    "answer": "9400"
+  },
+  {
+    "sentence": "Chinabank, whose place of foundation was Manila, has 295 locations and a net income of 15100000000.",
+    "question": "What was the place of foundation of the bank with 295 locations and a net income of 15,100,000,000?",
+    "answer": "Manila"
+  },
+  {
+    "sentence": "Chinabank, whose place of foundation was Manila, has 295 locations and a net income of 15100000000.",
+    "question": "How many locations does the bank founded in Manila have?",
+    "answer": "295"
+  },
+  {
+    "sentence": "Aaron S. Daggett, who was born in Maine, fought in the Battle of Gettysburg and awarded the Purple Heart.",
+    "question": "Where was the Purple Heart recipient who fought in the Battle of Gettysburg born?",
+    "answer": "Maine"
+  },
+  {
+    "sentence": "Aaron S. Daggett, who was born in Maine, fought in the Battle of Gettysburg and awarded the Purple Heart.",
+    "question": "Who won the Purple Heart?",
+    "answer": "Aaron S. Daggett"
+  },
+  {
+    "sentence": "Aaron S. Daggett, who was born in Maine, fought in the Battle of Gettysburg and awarded the Purple Heart.",
+    "question": "Who was born in Maine?",
+    "answer": "Aaron S. Daggett"
+  },
+  {
+    "sentence": "Lady Anne Monson was born in Darlington which is located in Kingdom of England.",
+    "question": "In what kingdom is the birthplace of Lady Anne Monson located?",
+    "answer": "Kingdom of England"
+  },
+  {
+    "sentence": "Dodge Coronet is the alternative name for the 1955 Dodge.",
+    "question": "What is the alternative name for the 1955 Dodge?",
+    "answer": "Dodge Coronet"
+  },
+  {
+    "sentence": "Arem-arem uses the ingredient banana leaf, it is a common dish in Indonesia.",
+    "question": "What ingredient does Arem-arem use?",
+    "answer": "banana leaf"
+  },
+  {
+    "sentence": "Aleksandr Prudnikov plays for FC Terek Grozny. The club which has its grounds in Grozny and which is managed by Rashid Rakhimov.",
+    "question": "Who plays for the club managed by Rashid Rakhimov whose grounds are in Grozny?",
+    "answer": "Aleksandr Prudnikov"
+  },
+  {
+    "sentence": "Aleksandr Prudnikov plays for FC Terek Grozny. The club which has its grounds in Grozny and which is managed by Rashid Rakhimov.",
+    "question": "Where does the club Aleksandr Prudnikov plays for have its grounds?",
+    "answer": "Grozny"
+  },
+  {
+    "sentence": "Aleksandr Prudnikov plays for FC Terek Grozny. The club which has its grounds in Grozny and which is managed by Rashid Rakhimov.",
+    "question": "Who does Aleksandr Prudnikov play for?",
+    "answer": "FC Terek Grozny"
+  },
+  {
+    "sentence": "Aleksandr Prudnikov plays for FC Terek Grozny. The club which has its grounds in Grozny and which is managed by Rashid Rakhimov.",
+    "question": "Who manages Terek Grozny?",
+    "answer": "Rashid Rakhimov"
+  },
+  {
+    "sentence": "Aaron S. Daggett fought in the American Civil War. He was given the Purple Heart.",
+    "question": "What was Aaron S. Daggett given?",
+    "answer": "Purple Heart"
+  },
+  {
+    "sentence": "Aaron S. Daggett fought in the American Civil War. He was given the Purple Heart.",
+    "question": "Who was given the Purple Heart?",
+    "answer": "Aaron S. Daggett"
+  },
+  {
+    "sentence": "Aaron S. Daggett fought in the American Civil War. He was given the Purple Heart.",
+    "question": "Who fought in the American Civil War?",
+    "answer": "Aaron S. Daggett"
+  },
+  {
+    "sentence": "John Cowper Powys was born in Shirley (Derbyshire). His notable work includes Porius: A Romance of the Dark Ages and A Glastonbury Romance.",
+    "question": "Who is the author of Porius: A Romance of the Dark Ages born in Shirley?",
+    "answer": "John Cowper Powys"
+  },
+  {
+    "sentence": "John Cowper Powys was born in Shirley (Derbyshire). His notable work includes Porius: A Romance of the Dark Ages and A Glastonbury Romance.",
+    "question": "What is the name of John Cowper Powys' famous work?",
+    "answer": "Porius: A Romance of the Dark Ages and A Glastonbury Romance"
+  },
+  {
+    "sentence": "John Cowper Powys was born in Shirley (Derbyshire). His notable work includes Porius: A Romance of the Dark Ages and A Glastonbury Romance.",
+    "question": "Where was John Cowper Powys born?",
+    "answer": "Shirley (Derbyshire)"
+  },
+  {
+    "sentence": "Bolt is a comic character created by Paris Cullins and Ernie Colón, who is a national of Puerto Rico.",
+    "question": "Who are the creators of the comic character co-created by a Puerto Rican national?",
+    "answer": "Paris Cullins and Ernie Colón"
+  },
+  {
+    "sentence": "Bolt is a comic character created by Paris Cullins and Ernie Colón, who is a national of Puerto Rico.",
+    "question": "What is Ernie Colón's nationality?",
+    "answer": "Puerto Rico"
+  },
+  {
+    "sentence": "Luciano Spalletti played for Empoli F.C. and Virtus Entella. He has also been manager of A.S. Roma.",
+    "question": "What club has the former player of Empoli F.C. and Virtus Entella been manager of?",
+    "answer": "A.S. Roma"
+  },
+  {
+    "sentence": "Luciano Spalletti played for Empoli F.C. and Virtus Entella. He has also been manager of A.S. Roma.",
+    "question": "Who played for Empoli F.C. and Virtus Entella?",
+    "answer": "Luciano Spalletti"
+  },
+  {
+    "sentence": "Luciano Spalletti played for Empoli F.C. and Virtus Entella. He has also been manager of A.S. Roma.",
+    "question": "Who did Luciano Spalletti play for?",
+    "answer": "Empoli F.C. and Virtus Entella"
+  },
+  {
+    "sentence": "Joko Widodo is the leader of Indonesia.",
+    "question": "Who is Indonesia's leader?",
+    "answer": "Joko Widodo"
+  },
+  {
+    "sentence": "The Aarhus University is in the city of Aarhus.",
+    "question": "What university is in Aarhus?",
+    "answer": "Aarhus University"
+  },
+  {
+    "sentence": "The Mason School of Business are the current tenants of, Alan B. Miller Hall (address: 101 Ukrop way) is situated in Virginia.",
+    "question": "Who are the current tenants of the hall situated in Virginia at 101 Ukrop way?",
+    "answer": "The Mason School of Business"
+  },
+  {
+    "sentence": "The Mason School of Business are the current tenants of, Alan B. Miller Hall (address: 101 Ukrop way) is situated in Virginia.",
+    "question": "In what state is the hall whose current tenants are The Mason School of Business located?",
+    "answer": "Virginia"
+  },
+  {
+    "sentence": "Big Hero 6 was Baymax's first film appearance.",
+    "question": "What was Baymax's first film appearance?",
+    "answer": "Big Hero 6"
+  },
+  {
+    "sentence": "Big Hero 6 was Baymax's first film appearance.",
+    "question": "Who first appeared in Big Hero 6?",
+    "answer": "Baymax"
+  },
+  {
+    "sentence": "The novel \"Into Battle\" followed \"Above the Veil\".",
+    "question": "What novel followed Above the Veil?",
+    "answer": "Into Battle"
+  },
+  {
+    "sentence": "The novel \"Into Battle\" followed \"Above the Veil\".",
+    "question": "What did the novel \"Into Battle\" follow?",
+    "answer": "Above the Veil"
+  },
+  {
+    "sentence": "A.C. Chievo Verona play in the Serie A league and their home ground is Stadio Marc'Antonio Bentegodi.",
+    "question": "What league is played by the club whose home ground is Stadio Marc'Antonio Bentegodi?",
+    "answer": "Serie A"
+  },
+  {
+    "sentence": "A.C. Chievo Verona play in the Serie A league and their home ground is Stadio Marc'Antonio Bentegodi.",
+    "question": "What is the home ground for A.C. Chievo Verona?",
+    "answer": "Stadio Marc'Antonio Bentegodi"
+  },
+  {
+    "sentence": "A.C. Chievo Verona play in the Serie A league and their home ground is Stadio Marc'Antonio Bentegodi.",
+    "question": "Who plays in the Serie A league?",
+    "answer": "Chievo Verona"
+  },
+  {
+    "sentence": "The celestial body, (66391) 1999 KW4, has an apoapsis of 162164091.8388 km and its epoch date is 14 July 2004.",
+    "question": "What is the apoapsis of the celestial body whose epoch date is 14 July 2004?",
+    "answer": "162164091.8388 km"
+  },
+  {
+    "sentence": "The celestial body, (66391) 1999 KW4, has an apoapsis of 162164091.8388 km and its epoch date is 14 July 2004.",
+    "question": "What is the celestial body's epoch date?",
+    "answer": "14 July 2004"
+  },
+  {
+    "sentence": "Maple Ridge Township (Alpena County, Michigan) is in the United States.",
+    "question": "In what country is Maple Ridge Township located?",
+    "answer": "United States"
+  },
+  {
+    "sentence": "Philippe of Belgium is the leader of Belgium.",
+    "question": "Who leads Belgium?",
+    "answer": "Philippe of Belgium"
+  },
+  {
+    "sentence": "Liselotte Grschebina was born within the German Empire.",
+    "question": "In which empire was Liselotte Grschebina born?",
+    "answer": "German Empire"
+  },
+  {
+    "sentence": "Alex Day performs folk music.",
+    "question": "What genre of music does Alex Day perform?",
+    "answer": "folk music"
+  },
+  {
+    "sentence": "The leader of Brandon (Manitoba) is the Conservative Party of Canada.",
+    "question": "Who leads Brandon, Manitoba?",
+    "answer": "the Conservative Party of Canada"
+  },
+  {
+    "sentence": "Akeem Adams club is Ferencvárosi TC.",
+    "question": "What club does Akeem Adams play for?",
+    "answer": "Ferencvárosi TC"
+  },
+  {
+    "sentence": "Ahmedabad is in India.",
+    "question": "In what country is Ahmedabad?",
+    "answer": "India"
+  },
+  {
+    "sentence": "110 Lydia has a rotation period of 39332.9.",
+    "question": "What is the rotation period of 110 Lydia?",
+    "answer": "39332.9"
+  },
+  {
+    "sentence": "Ciudad Ayala is a city.",
+    "question": "What type of place is Ciudad Ayala?",
+    "answer": "a city"
+  },
+  {
+    "sentence": "Bozo the Iron Man was created by George Brenner.",
+    "question": "Who is the creator of the comic character Bozo the Iron Man?",
+    "answer": "George Brenner"
+  },
+  {
+    "sentence": "Quezon City has a total area of 165.33.",
+    "question": "What is the total area of Quezon City?",
+    "answer": "165.33"
+  },
+  {
+    "sentence": "Bacon sandwich is a dish from the United Kingdom.",
+    "question": "Which country does the bacon sandwich come from?",
+    "answer": "the United Kingdom"
+  },
+  {
+    "sentence": "The maiden flight of the Antares rocket was on April 21st, 2013.",
+    "question": "When did the Antares rocket make its maiden flight?",
+    "answer": "April 21st, 2013"
+  },
+  {
+    "sentence": "Washington, D.C. is the capital city of the United States.",
+    "question": "What is the capital city of the United States?",
+    "answer": "Washington, D.C."
+  },
+  {
+    "sentence": "Abner W. Sibal's successor was Donald J. Irwin.",
+    "question": "Who succeeded Abner W. Sibal?",
+    "answer": "Donald J. Irwin"
+  },
+  {
+    "sentence": "The branch of military Albert Jennings Fountain belonged to was 1st Regiment New Mexico Volunteer Cavalry.",
+    "question": "To which military branch did Albert Jennings Fountain belong?",
+    "answer": "1st Regiment New Mexico Volunteer Cavalry"
+  },
+  {
+    "sentence": "The Olympic Stadium (Athens) is located in the city of Athens.",
+    "question": "In what city is the Olympic Stadium located?",
+    "answer": "Athens"
+  },
+  {
+    "sentence": "The full name of AFC Ajax (amateurs) is \"Amsterdamsche Football Club Ajax Amateurs\".",
+    "question": "What is the full name of AFC Ajax amateurs?",
+    "answer": "Amsterdamsche Football Club Ajax Amateurs"
+  },
+  {
+    "sentence": "The book \"A Glastonbury Romance\" was followed by \"Weymouth Sands\".",
+    "question": "Which book followed A Glastonbury Romance?",
+    "answer": "Weymouth Sands"
+  }
+]

@@ -1,0 +1,582 @@
+[
+  {
+    "sentence": "Lady Anne Monson’s nationality is English but currently resides in India, whose total area is 3,287,590 km^2. One of the leaders of India is Chief Justice.",
+    "question": "What is the total area of the country where Lady Anne Monson resides?",
+    "answer": "3,287,590 km^2"
+  },
+  {
+    "sentence": "Lady Anne Monson’s nationality is English but currently resides in India, whose total area is 3,287,590 km^2. One of the leaders of India is Chief Justice.",
+    "question": "Who is one of the leaders of India?",
+    "answer": "Chief Justice"
+  },
+  {
+    "sentence": "Darinka Dentcheva was born in New Jersey which has a total population of 22,591.38.",
+    "question": "What is the population of the place where Darinka Dentcheva was born?",
+    "answer": "22,591.38"
+  },
+  {
+    "sentence": "Darinka Dentcheva was born in New Jersey which has a total population of 22,591.38.",
+    "question": "Where was Darinka Dentcheva born?",
+    "answer": "New Jersey"
+  },
+  {
+    "sentence": "Darinka Dentcheva was born in New Jersey which has a total population of 22,591.38.",
+    "question": "Who was born in New Jersey?",
+    "answer": "Darinka Dentcheva"
+  },
+  {
+    "sentence": "The (19255) 1994 VK8 which has an epoch date of the 31st December 2006 has an orbital period of 8788850000.0 and a periapsis of 6155910000000.0.",
+    "question": "What is the orbital period of the 1994 VK8?",
+    "answer": "8788850000"
+  },
+  {
+    "sentence": "The (19255) 1994 VK8 which has an epoch date of the 31st December 2006 has an orbital period of 8788850000.0 and a periapsis of 6155910000000.0.",
+    "question": "What is the epoch date of the VK8?",
+    "answer": "the 31st December 2006"
+  },
+  {
+    "sentence": "The (19255) 1994 VK8 which has an epoch date of the 31st December 2006 has an orbital period of 8788850000.0 and a periapsis of 6155910000000.0.",
+    "question": "What is the periapsis of the 1994 VK8?",
+    "answer": "6155910000000"
+  },
+  {
+    "sentence": "Populous was the architect of 3Arena in Dublin which was completed in December 2008.",
+    "question": "When was the building designed by Populous in Dublin completed?",
+    "answer": "December 2008"
+  },
+  {
+    "sentence": "Populous was the architect of 3Arena in Dublin which was completed in December 2008.",
+    "question": "Populous was the architect of what in Dublin?",
+    "answer": "3Arena"
+  },
+  {
+    "sentence": "The comic book character Arion was created by Paul Kupperberg and Jan Duursema, a winner of the Eisner Award.",
+    "question": "Who created Arion?",
+    "answer": "Paul Kupperberg and Jan Duursema"
+  },
+  {
+    "sentence": "The comic book character Arion was created by Paul Kupperberg and Jan Duursema, a winner of the Eisner Award.",
+    "question": "What award did one of the creators of Arion win?",
+    "answer": "Eisner Award"
+  },
+  {
+    "sentence": "Alcatraz Versus the Evil Librarians is from the United States where they speak English and White Americans live.",
+    "question": "Where is Alcatraz Versus the Evil Librarians from?",
+    "answer": "the United States"
+  },
+  {
+    "sentence": "Abilene Regional Airport serves the city of Abilene in Texas. Its runway is 2194 feet and is 546 m above sea level.",
+    "question": "What is the runway of Abilene Regional Airport?",
+    "answer": "2194 feet"
+  },
+  {
+    "sentence": "Abilene Regional Airport serves the city of Abilene in Texas. Its runway is 2194 feet and is 546 m above sea level.",
+    "question": "How far above sea level is the airport serving Abilene?",
+    "answer": "546 m"
+  },
+  {
+    "sentence": "Abilene Regional Airport serves the city of Abilene in Texas. Its runway is 2194 feet and is 546 m above sea level.",
+    "question": "How far above sea level is Abilene Regional Airport?",
+    "answer": "546 m"
+  },
+  {
+    "sentence": "Agra Airport is in Uttar Pradesh, Awadh, and is located at 167.94 metres above sea level.",
+    "question": "How many meters above sea level is Agra Airport located?",
+    "answer": "167.94"
+  },
+  {
+    "sentence": "Agra Airport is in Uttar Pradesh, Awadh, and is located at 167.94 metres above sea level.",
+    "question": "What airport is located in Uttar Pradesh?",
+    "answer": "Agra Airport"
+  },
+  {
+    "sentence": "Agra Airport is in Uttar Pradesh, Awadh, and is located at 167.94 metres above sea level.",
+    "question": "How high is Agra Airport above sea level?",
+    "answer": "167.94 metres"
+  },
+  {
+    "sentence": "Alpharetta, is in Georgia, in the United States, of which Washington, D.C. is the capital and Native Americans are an ethnic group.",
+    "question": "What is an ethnic group in the United States?",
+    "answer": "Native Americans"
+  },
+  {
+    "sentence": "The Blues is a stylistic origin of rock music, which itself originated from folk music, and is performed by Alan Frew.",
+    "question": "What is a stylistic origin of rock music?",
+    "answer": "The Blues"
+  },
+  {
+    "sentence": "The Blues is a stylistic origin of rock music, which itself originated from folk music, and is performed by Alan Frew.",
+    "question": "What music genre did rock music, whose stylistic origin is The Blues, originate from?",
+    "answer": "folk music"
+  },
+  {
+    "sentence": "The Blues is a stylistic origin of rock music, which itself originated from folk music, and is performed by Alan Frew.",
+    "question": "Who performs The Blues?",
+    "answer": "Alan Frew"
+  },
+  {
+    "sentence": "MTU Friedrichshafen is in Friedrichshafen and made the engines that power the A-Rosa Luna built on the Neptun Werft.",
+    "question": "Where was the A-Rosa Luna built?",
+    "answer": "Neptun Werft"
+  },
+  {
+    "sentence": "The Asilomar Conference Grounds constructed in 1913 is located at Pacific Grove, California and was added to the National Register of Historic Places on February the 27nd 1987.",
+    "question": "Where is the site constructed in 1913 and added to the National Register of Historic Places in 1987 located?",
+    "answer": "Pacific Grove, California"
+  },
+  {
+    "sentence": "The Asilomar Conference Grounds constructed in 1913 is located at Pacific Grove, California and was added to the National Register of Historic Places on February the 27nd 1987.",
+    "question": "When was the Asilomar Conference Grounds constructed?",
+    "answer": "1913"
+  },
+  {
+    "sentence": "Born in the United States, Albert Jennings Fountain, fought in the American Civil War. Jefferson Davis was a commander in the American Civil War.",
+    "question": "Who was a commander in the American Civil War?",
+    "answer": "Jefferson Davis"
+  },
+  {
+    "sentence": "Born in the United States, Albert Jennings Fountain, fought in the American Civil War. Jefferson Davis was a commander in the American Civil War.",
+    "question": "Who was a commander in the war that Albert Jennings Fountain fought in?",
+    "answer": "Jefferson Davis"
+  },
+  {
+    "sentence": "Born in the United States, Albert Jennings Fountain, fought in the American Civil War. Jefferson Davis was a commander in the American Civil War.",
+    "question": "What war did Albert Jennings Fountain fight in?",
+    "answer": "American Civil War"
+  },
+  {
+    "sentence": "Cecil Parker, born in 1897, stars in the 1956 film It's Great to be Young.",
+    "question": "What film did Cecil Parker star in?",
+    "answer": "It's Great to be Young"
+  },
+  {
+    "sentence": "The Asian Americans are an ethnic group in the United States where Angola is part of the state of Indiana.",
+    "question": "In what country is the state containing Angola located?",
+    "answer": "the United States"
+  },
+  {
+    "sentence": "The Asian Americans are an ethnic group in the United States where Angola is part of the state of Indiana.",
+    "question": "What state is Angola a part of?",
+    "answer": "Indiana"
+  },
+  {
+    "sentence": "The book Alcatraz Versus the Evil Librarians comes from the United States where one of the ethnic groups is African American and one of the leaders is Joe Biden.",
+    "question": "What book comes from the United States?",
+    "answer": "Alcatraz Versus the Evil Librarians"
+  },
+  {
+    "sentence": "Angola is located in Pleasant Township which is part of Steuben County, Indiana in the United States where Native Americans are an ethnic group.",
+    "question": "What ethnic group lives in the country containing the township where Angola is located?",
+    "answer": "Native Americans"
+  },
+  {
+    "sentence": "Angola is located in Pleasant Township which is part of Steuben County, Indiana in the United States where Native Americans are an ethnic group.",
+    "question": "What county is Angola located in?",
+    "answer": "Steuben County, Indiana"
+  },
+  {
+    "sentence": "Peso is currency used by Mexicans in Mexico. Bionico is a dessert that can be found in Guadalajara, Mexico. Cookies are also a type of dessert.",
+    "question": "What is another type of dessert?",
+    "answer": "Cookies"
+  },
+  {
+    "sentence": "Peso is currency used by Mexicans in Mexico. Bionico is a dessert that can be found in Guadalajara, Mexico. Cookies are also a type of dessert.",
+    "question": "Where can bionico be found?",
+    "answer": "Guadalajara, Mexico"
+  },
+  {
+    "sentence": "Peso is currency used by Mexicans in Mexico. Bionico is a dessert that can be found in Guadalajara, Mexico. Cookies are also a type of dessert.",
+    "question": "What currency is used by Mexicans in Mexico?",
+    "answer": "Peso"
+  },
+  {
+    "sentence": "Aaron S Daggett took part in the Battle of Salem Church, which was part of the American Civil War, where Jefferson Davis was a commander.",
+    "question": "Who was the commander of the war that included the battle Aaron S Daggett took part in?",
+    "answer": "Jefferson Davis"
+  },
+  {
+    "sentence": "Aaron S Daggett took part in the Battle of Salem Church, which was part of the American Civil War, where Jefferson Davis was a commander.",
+    "question": "What battle did Aaron S Daggett participate in?",
+    "answer": "Battle of Salem Church"
+  },
+  {
+    "sentence": "The 14th New Jersey Volunteer Infantry Monument which is located in the Monocacy National Battlefield was established on 11 July 1907. It falls within the category of Historic districts in the US.",
+    "question": "Where is the 14th New Jersey Volunteer Infantry Monument located?",
+    "answer": "the Monocacy National Battlefield"
+  },
+  {
+    "sentence": "The 14th New Jersey Volunteer Infantry Monument which is located in the Monocacy National Battlefield was established on 11 July 1907. It falls within the category of Historic districts in the US.",
+    "question": "What district category does the monument located in the Monocacy National Battlefield belong to?",
+    "answer": "Historic districts"
+  },
+  {
+    "sentence": "The 14th New Jersey Volunteer Infantry Monument which is located in the Monocacy National Battlefield was established on 11 July 1907. It falls within the category of Historic districts in the US.",
+    "question": "When was the 14th New Jersey Volunteer Infantry Monument established?",
+    "answer": "11 July 1907"
+  },
+  {
+    "sentence": "It's Great to Be Young is a 1956 film in which John Mills played a lead role. The film featured Gilbert Taylor as a cinematographer, and it received £282,838. The duration of the film is around 94 minutes.",
+    "question": "Who was the cinematographer for the 1956 film in which John Mills played a lead role?",
+    "answer": "Gilbert Taylor"
+  },
+  {
+    "sentence": "It's Great to Be Young is a 1956 film in which John Mills played a lead role. The film featured Gilbert Taylor as a cinematographer, and it received £282,838. The duration of the film is around 94 minutes.",
+    "question": "What is the duration of It's Great to Be Young?",
+    "answer": "94 minutes"
+  },
+  {
+    "sentence": "It's Great to Be Young is a 1956 film in which John Mills played a lead role. The film featured Gilbert Taylor as a cinematographer, and it received £282,838. The duration of the film is around 94 minutes.",
+    "question": "What year was It's Great to Be Young released?",
+    "answer": "1956"
+  },
+  {
+    "sentence": "It's Great to Be Young is a 1956 film in which John Mills played a lead role. The film featured Gilbert Taylor as a cinematographer, and it received £282,838. The duration of the film is around 94 minutes.",
+    "question": "What was the title of the 1956 film?",
+    "answer": "It's Great to Be Young"
+  },
+  {
+    "sentence": "It's Great to Be Young is a 1956 film in which John Mills played a lead role. The film featured Gilbert Taylor as a cinematographer, and it received £282,838. The duration of the film is around 94 minutes.",
+    "question": "How much did It's Great to Be Young receive?",
+    "answer": "£282,838"
+  },
+  {
+    "sentence": "Punk blues is the genre of the album Turn Me On that was self-produced by the American band Honeymoon Killers. Noise rock is the genre of the album Turn Me On as well that has run time of 35.1 minutes which was preceded by the album Let It Breed.",
+    "question": "How long has the album Turn Me On run?",
+    "answer": "35.1 minutes"
+  },
+  {
+    "sentence": "Punk blues is the genre of the album Turn Me On that was self-produced by the American band Honeymoon Killers. Noise rock is the genre of the album Turn Me On as well that has run time of 35.1 minutes which was preceded by the album Let It Breed.",
+    "question": "Who self-produced the album preceded by Let It Breed?",
+    "answer": "Honeymoon Killers"
+  },
+  {
+    "sentence": "Punk blues is the genre of the album Turn Me On that was self-produced by the American band Honeymoon Killers. Noise rock is the genre of the album Turn Me On as well that has run time of 35.1 minutes which was preceded by the album Let It Breed.",
+    "question": "What is the genre of the album Turn Me On?",
+    "answer": "Punk blues"
+  },
+  {
+    "sentence": "Punk blues is the genre of the album Turn Me On that was self-produced by the American band Honeymoon Killers. Noise rock is the genre of the album Turn Me On as well that has run time of 35.1 minutes which was preceded by the album Let It Breed.",
+    "question": "What was the name of the album that preceded Turn Me On?",
+    "answer": "Let It Breed"
+  },
+  {
+    "sentence": "Punk blues is the genre of the album Turn Me On that was self-produced by the American band Honeymoon Killers. Noise rock is the genre of the album Turn Me On as well that has run time of 35.1 minutes which was preceded by the album Let It Breed.",
+    "question": "What album was self-produced by Honeymoon Killers?",
+    "answer": "Turn Me On"
+  },
+  {
+    "sentence": "Bootleg Series Volume 1: The Quine Tapes, released by the record label Polydor Records, was preceded by the album Squeeze.",
+    "question": "What album preceded the release put out by Polydor Records known as The Quine Tapes?",
+    "answer": "Squeeze"
+  },
+  {
+    "sentence": "Bootleg Series Volume 1: The Quine Tapes, released by the record label Polydor Records, was preceded by the album Squeeze.",
+    "question": "What label released Bootleg Series Volume 1: The Quine Tapes?",
+    "answer": "Polydor Records"
+  },
+  {
+    "sentence": "Mexico is inhabited by Mexicans and the currency used there is the Mexican peso. Bionico is a dish served for dessert there and sour cream is used to make this dish.",
+    "question": "What currency is used in Mexico?",
+    "answer": "Mexican peso"
+  },
+  {
+    "sentence": "Mexico is inhabited by Mexicans and the currency used there is the Mexican peso. Bionico is a dish served for dessert there and sour cream is used to make this dish.",
+    "question": "What dessert is served in the country whose currency is the Mexican peso?",
+    "answer": "Bionico"
+  },
+  {
+    "sentence": "The AIDS Journal, first published in 1987, belongs to the academic discipline HIV/AIDS, predominantly HIV.",
+    "question": "When was the AIDS Journal first published?",
+    "answer": "1987"
+  },
+  {
+    "sentence": "The AIDS Journal, first published in 1987, belongs to the academic discipline HIV/AIDS, predominantly HIV.",
+    "question": "The AIDS Journal belongs to what academic discipline?",
+    "answer": "HIV/AIDS"
+  },
+  {
+    "sentence": "Construction of 250 Delaware Avenue began in January 2014 and has 12 floors with an area of 308438 square metres.",
+    "question": "What is the name of the street that has 12 floors?",
+    "answer": "250 Delaware Avenue"
+  },
+  {
+    "sentence": "Construction of 250 Delaware Avenue began in January 2014 and has 12 floors with an area of 308438 square metres.",
+    "question": "What is the area of the 12-floor building whose construction began in January 2014?",
+    "answer": "308438 square metres"
+  },
+  {
+    "sentence": "Construction of 250 Delaware Avenue began in January 2014 and has 12 floors with an area of 308438 square metres.",
+    "question": "How many floors does 250 Delaware Avenue have?",
+    "answer": "12"
+  },
+  {
+    "sentence": "The UK dish BLT is a variation of the bacon sandwich which has ketchup as one of its ingredients.",
+    "question": "What sandwich is BLT a variation of?",
+    "answer": "bacon"
+  },
+  {
+    "sentence": "The UK dish BLT is a variation of the bacon sandwich which has ketchup as one of its ingredients.",
+    "question": "What is one of the ingredients of the sandwich that the UK dish BLT is a variation of?",
+    "answer": "ketchup"
+  },
+  {
+    "sentence": "Located in the Philippines, Chinabank has 295 locations.",
+    "question": "What bank has 295 locations in the Philippines?",
+    "answer": "Chinabank"
+  },
+  {
+    "sentence": "Located in the Philippines, Chinabank has 295 locations.",
+    "question": "How many locations does Chinabank have?",
+    "answer": "295"
+  },
+  {
+    "sentence": "The Train song Mermaid (Columbia Records/Sony Music Entertainment) was followed by the release of John Lennon song Imagine and Happy Xmas (War is Over).",
+    "question": "What John Lennon song was released after the Train song Mermaid?",
+    "answer": "Imagine and Happy Xmas"
+  },
+  {
+    "sentence": "The Train song Mermaid (Columbia Records/Sony Music Entertainment) was followed by the release of John Lennon song Imagine and Happy Xmas (War is Over).",
+    "question": "Who released the song Imagine and Happy Xmas?",
+    "answer": "John Lennon"
+  },
+  {
+    "sentence": "Akeem Ayers, who started his career in 2011, debuted for the Tennessee Titans.",
+    "question": "Who debuted for the Tennessee Titans?",
+    "answer": "Akeem Ayers"
+  },
+  {
+    "sentence": "Established in 2000 The Acharya Institute of Technology is located in Bangalore and is affiliated with Visvesvaraya Technological University.",
+    "question": "When was the Acharya Institute of Technology established?",
+    "answer": "2000"
+  },
+  {
+    "sentence": "Established in 2000 The Acharya Institute of Technology is located in Bangalore and is affiliated with Visvesvaraya Technological University.",
+    "question": "Where is the institute established in 2000 and affiliated with Visvesvaraya Technological University located?",
+    "answer": "Bangalore"
+  },
+  {
+    "sentence": "Established in 2000 The Acharya Institute of Technology is located in Bangalore and is affiliated with Visvesvaraya Technological University.",
+    "question": "What university is the Acharya Institute affiliated with?",
+    "answer": "Visvesvaraya Technological University"
+  },
+  {
+    "sentence": "Piotr Hallmann weighs 70.308 kilograms and was born in Gdynia, Poland, which follows the Central European Summer Time timezone.",
+    "question": "What timezone does the birthplace of Piotr Hallmann follow?",
+    "answer": "Central European Summer Time"
+  },
+  {
+    "sentence": "Piotr Hallmann weighs 70.308 kilograms and was born in Gdynia, Poland, which follows the Central European Summer Time timezone.",
+    "question": "Where was Piotr Hallmann born?",
+    "answer": "Gdynia"
+  },
+  {
+    "sentence": "The nickname of Agremiacao Sportiva Arapiraquense is \"Alvinegro\", they played in 2015 and they have 17,000 members.",
+    "question": "How many members do Agremiacao Sportiva Arapiraquense have?",
+    "answer": "17,000"
+  },
+  {
+    "sentence": "The nickname of Agremiacao Sportiva Arapiraquense is \"Alvinegro\", they played in 2015 and they have 17,000 members.",
+    "question": "What is the nickname of the club that played in 2015 and has 17,000 members?",
+    "answer": "Alvinegro"
+  },
+  {
+    "sentence": "Approximately 500 employees make up the academic staff at Acharya Institute of Technology, a Technical Campus designated by the All India Council for Technical Education of Mumbai, affiliated with the Visvesvaraya Technological University of Belgaum, and directed by Dr. G.P. Prabhukumar at Soldevanahalli, Acharya Dr. Sarvapalli Radhakrishnan Road, Hessarghatta Main Road, Bangalore – 560090.",
+    "question": "Who directed the academic staff at Acharya Institute of Technology?",
+    "answer": "Prabhukumar"
+  },
+  {
+    "sentence": "Approximately 500 employees make up the academic staff at Acharya Institute of Technology, a Technical Campus designated by the All India Council for Technical Education of Mumbai, affiliated with the Visvesvaraya Technological University of Belgaum, and directed by Dr. G.P. Prabhukumar at Soldevanahalli, Acharya Dr. Sarvapalli Radhakrishnan Road, Hessarghatta Main Road, Bangalore – 560090.",
+    "question": "How many employees are at Acharya Institute of Technology?",
+    "answer": "Approximately 500"
+  },
+  {
+    "sentence": "Approximately 500 employees make up the academic staff at Acharya Institute of Technology, a Technical Campus designated by the All India Council for Technical Education of Mumbai, affiliated with the Visvesvaraya Technological University of Belgaum, and directed by Dr. G.P. Prabhukumar at Soldevanahalli, Acharya Dr. Sarvapalli Radhakrishnan Road, Hessarghatta Main Road, Bangalore – 560090.",
+    "question": "Who directs the Technical Campus designated by the All India Council for Technical Education of Mumbai?",
+    "answer": "Prabhukumar"
+  },
+  {
+    "sentence": "Approximately 500 employees make up the academic staff at Acharya Institute of Technology, a Technical Campus designated by the All India Council for Technical Education of Mumbai, affiliated with the Visvesvaraya Technological University of Belgaum, and directed by Dr. G.P. Prabhukumar at Soldevanahalli, Acharya Dr. Sarvapalli Radhakrishnan Road, Hessarghatta Main Road, Bangalore – 560090.",
+    "question": "Where is the Acharya Institute of Technology located?",
+    "answer": "Soldevanahalli"
+  },
+  {
+    "sentence": "Approximately 500 employees make up the academic staff at Acharya Institute of Technology, a Technical Campus designated by the All India Council for Technical Education of Mumbai, affiliated with the Visvesvaraya Technological University of Belgaum, and directed by Dr. G.P. Prabhukumar at Soldevanahalli, Acharya Dr. Sarvapalli Radhakrishnan Road, Hessarghatta Main Road, Bangalore – 560090.",
+    "question": "What road is the Acharya Institute of Technology located on?",
+    "answer": "Acharya Dr. Sarvapalli Radhakrishnan Road"
+  },
+  {
+    "sentence": "Associazione Calcio Lumezzane SpA is abbreviated to A.C. Lumezzane, they have 4150 members and play in the Lega Pro league.",
+    "question": "What league does the club abbreviated to A.C. Lumezzane play in?",
+    "answer": "Lega Pro league"
+  },
+  {
+    "sentence": "Associazione Calcio Lumezzane SpA is abbreviated to A.C. Lumezzane, they have 4150 members and play in the Lega Pro league.",
+    "question": "How many members does A.C. Lumezzane have?",
+    "answer": "4150"
+  },
+  {
+    "sentence": "Albany is in the U.S. in the State of Georgia. Asian Americans are an ethnic group in the United States.",
+    "question": "What ethnic group lives in the country where Albany is located?",
+    "answer": "Asian Americans"
+  },
+  {
+    "sentence": "Albany is in the U.S. in the State of Georgia. Asian Americans are an ethnic group in the United States.",
+    "question": "What ethnic group is in the United States?",
+    "answer": "Asian Americans"
+  },
+  {
+    "sentence": "Albany is in the U.S. in the State of Georgia. Asian Americans are an ethnic group in the United States.",
+    "question": "Where is Albany located?",
+    "answer": "the U.S."
+  },
+  {
+    "sentence": "Alan Frew plays with Glass Tiger and is originally from Newmarket Ontario, Canada.",
+    "question": "Where is the musician who plays with Glass Tiger originally from?",
+    "answer": "Newmarket Ontario, Canada"
+  },
+  {
+    "sentence": "Alan Frew plays with Glass Tiger and is originally from Newmarket Ontario, Canada.",
+    "question": "Who plays with Glass Tiger?",
+    "answer": "Alan Frew"
+  },
+  {
+    "sentence": "The US national Alan Shepard was born in New Hampshire in 1923 and died in California. He was awarded the Distinguished Service Medal by the United States Navy.",
+    "question": "Where was Alan Shepard born?",
+    "answer": "New Hampshire"
+  },
+  {
+    "sentence": "The US national Alan Shepard was born in New Hampshire in 1923 and died in California. He was awarded the Distinguished Service Medal by the United States Navy.",
+    "question": "Who awarded the Distinguished Service Medal to the US national born in New Hampshire in 1923?",
+    "answer": "United States Navy"
+  },
+  {
+    "sentence": "The US national Alan Shepard was born in New Hampshire in 1923 and died in California. He was awarded the Distinguished Service Medal by the United States Navy.",
+    "question": "When was Alan Shepard born?",
+    "answer": "1923"
+  },
+  {
+    "sentence": "The apoapsis of 1147 Stavropolis is 418476000000.0. Its orbital period of is 1249.6 days, and it was discovered by Grigory Neujmin.",
+    "question": "What is the apoapsis of 1147 Stavropolis?",
+    "answer": "418476000000"
+  },
+  {
+    "sentence": "The apoapsis of 1147 Stavropolis is 418476000000.0. Its orbital period of is 1249.6 days, and it was discovered by Grigory Neujmin.",
+    "question": "What is the orbital period of the asteroid discovered by Grigory Neujmin?",
+    "answer": "1249.6 days"
+  },
+  {
+    "sentence": "The apoapsis of 1147 Stavropolis is 418476000000.0. Its orbital period of is 1249.6 days, and it was discovered by Grigory Neujmin.",
+    "question": "Who discovered 1147 Stavropolis?",
+    "answer": "Grigory Neujmin"
+  },
+  {
+    "sentence": "The Native Americans are an ethnic group in the US where Abraham A Ribicoff has nationality, having been born in New Britain, Connecticut.",
+    "question": "What is an ethnic group in the country where Abraham A Ribicoff has nationality?",
+    "answer": "Native Americans"
+  },
+  {
+    "sentence": "Tom Sizemore stars in Super Capers alongside Michael Rooker who also appears in the movie. Super Capers is a film spoken in English that runs for 98 minutes.",
+    "question": "Who stars in the film that runs for 98 minutes and is spoken in English?",
+    "answer": "Tom Sizemore"
+  },
+  {
+    "sentence": "Tom Sizemore stars in Super Capers alongside Michael Rooker who also appears in the movie. Super Capers is a film spoken in English that runs for 98 minutes.",
+    "question": "In what language is Super Capers spoken?",
+    "answer": "English"
+  },
+  {
+    "sentence": "Tom Sizemore stars in Super Capers alongside Michael Rooker who also appears in the movie. Super Capers is a film spoken in English that runs for 98 minutes.",
+    "question": "What is the name of the movie that stars Tom Sizemore in?",
+    "answer": "Super Capers"
+  },
+  {
+    "sentence": "Tom Sizemore stars in Super Capers alongside Michael Rooker who also appears in the movie. Super Capers is a film spoken in English that runs for 98 minutes.",
+    "question": "How long does Super Capers run?",
+    "answer": "98 minutes"
+  },
+  {
+    "sentence": "Darlington is in the North East England region.",
+    "question": "Where is Darlington located?",
+    "answer": "North East England"
+  },
+  {
+    "sentence": "Brandon Carter, known for the Carter constant and No-hair theorem, is a professional in the field of general relativity.",
+    "question": "In what field does Brandon Carter work?",
+    "answer": "general relativity"
+  },
+  {
+    "sentence": "Brandon Carter, known for the Carter constant and No-hair theorem, is a professional in the field of general relativity.",
+    "question": "Who is the professional in general relativity known for the No-hair theorem?",
+    "answer": "Brandon Carter"
+  },
+  {
+    "sentence": "Arlington is part of the state of Texas in the United States where English is the spoken language.",
+    "question": "What state is Arlington a part of?",
+    "answer": "Texas"
+  },
+  {
+    "sentence": "Arlington is part of the state of Texas in the United States where English is the spoken language.",
+    "question": "What language is spoken in Arlington?",
+    "answer": "English"
+  },
+  {
+    "sentence": "Bootleg Series Volume 1: The Quine Tapes released on October 16, 2001 is 230.05 minutes long.",
+    "question": "How long is the Bootleg Series Volume 1: The Quine Tapes?",
+    "answer": "230.05 minutes"
+  },
+  {
+    "sentence": "Bootleg Series Volume 1: The Quine Tapes released on October 16, 2001 is 230.05 minutes long.",
+    "question": "When was Bootleg Series Volume 1: The Quine Tapes released?",
+    "answer": "October 16, 2001"
+  },
+  {
+    "sentence": "Elliot See, who was born in Dallas, attended the University of Texas at Austin (whose mascot is Hook'em).",
+    "question": "What is the mascot of the University of Texas at Austin?",
+    "answer": "Hook'em"
+  },
+  {
+    "sentence": "Elliot See, who was born in Dallas, attended the University of Texas at Austin (whose mascot is Hook'em).",
+    "question": "Who attended the University of Texas at Austin?",
+    "answer": "Elliot See"
+  },
+  {
+    "sentence": "Bacon and sausage are the main ingredients in a Bacon Explosion, which comes from the United States.",
+    "question": "Bacon and sausage are the main ingredients in what?",
+    "answer": "Bacon Explosion"
+  },
+  {
+    "sentence": "Ahmad Kadhim Assad, who plays for Al-Quwa Al-Jawiya, formerly played for Esteghlal Ahvaz F.C. who are managed by Adnan Hamad.",
+    "question": "Who manages the club where Ahmad Kadhim Assad used to formerly play?",
+    "answer": "Adnan Hamad"
+  },
+  {
+    "sentence": "Ahmad Kadhim Assad, who plays for Al-Quwa Al-Jawiya, formerly played for Esteghlal Ahvaz F.C. who are managed by Adnan Hamad.",
+    "question": "Who is Ahmad Kadhim Assad playing for?",
+    "answer": "Al-Quwa Al-Jawiya"
+  },
+  {
+    "sentence": "Bootleg Series Volume 1: The Quine Tapes was recorded in St. Louis, Missouri, United States and has a runtime of 230.05 minutes. It was preceded by the Velvet Underground's Squeeze.",
+    "question": "Where was Bootleg Series Volume 1 recorded?",
+    "answer": "St. Louis, Missouri"
+  },
+  {
+    "sentence": "Bootleg Series Volume 1: The Quine Tapes was recorded in St. Louis, Missouri, United States and has a runtime of 230.05 minutes. It was preceded by the Velvet Underground's Squeeze.",
+    "question": "What album preceded the recording made in St. Louis, Missouri with a runtime of 230.05 minutes?",
+    "answer": "Squeeze"
+  },
+  {
+    "sentence": "Bootleg Series Volume 1: The Quine Tapes was recorded in St. Louis, Missouri, United States and has a runtime of 230.05 minutes. It was preceded by the Velvet Underground's Squeeze.",
+    "question": "What was recorded in St. Louis, Missouri?",
+    "answer": "Bootleg Series Volume 1: The Quine Tapes"
+  },
+  {
+    "sentence": "Bootleg Series Volume 1: The Quine Tapes was recorded in St. Louis, Missouri, United States and has a runtime of 230.05 minutes. It was preceded by the Velvet Underground's Squeeze.",
+    "question": "What is the runtime of Bootleg Series Volume 1: The Quine Tapes?",
+    "answer": "230.05 minutes"
+  },
+  {
+    "sentence": "Bootleg Series Volume 1: The Quine Tapes was recorded in St. Louis, Missouri, United States and has a runtime of 230.05 minutes. It was preceded by the Velvet Underground's Squeeze.",
+    "question": "How long was the Bootleg Series Volume 1: The Quine Tapes recorded?",
+    "answer": "05 minutes"
+  }
+]
