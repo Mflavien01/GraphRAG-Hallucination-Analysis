@@ -195,7 +195,7 @@ def save_results(results, output_path):
 
 
 OUTPUT_DIR = Path(__file__).parent / "output_questions"
-SAMPLES_PER_DATASET = 50
+SAMPLES_PER_DATASET = 100
 
 print("DATASET: LettrIA")
 lettria_sample = sample_proportional(load_lettria(lettria_dir), SAMPLES_PER_DATASET)
