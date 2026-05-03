@@ -54,7 +54,7 @@ def load_questions_llm(file_path):
         for line in f:
             entry = json.loads(line)
 
-            single_hop = entry.get("graph_single_hop", {})
+            single_hop = entry.get("graph_single_hop") or {}
             if single_hop.get("question") and single_hop.get("answer"):
                 questions.append({
                     "id":        entry["id"],
@@ -66,8 +66,8 @@ def load_questions_llm(file_path):
                     "answer":    single_hop["answer"],
                 })
 
-            multi_hop = entry.get("graph_multi_hop", {})
-            if multi_hop and multi_hop.get("question") and multi_hop.get("answer"):
+            multi_hop = entry.get("graph_multi_hop") or {}
+            if multi_hop.get("question") and multi_hop.get("answer"):
                 questions.append({
                     "id":        entry["id"],
                     "source_id": entry["source_id"],
@@ -121,11 +121,12 @@ if __name__ == "__main__":
             questions_llm += load_questions_llm(fpath)
     print(f"Loaded {len(questions_llm)} LLM graph questions")
 
-    all_questions = questions_t5 + questions_llm
-
-    if not all_questions:
+    if not questions_t5 and not questions_llm:
         print("No questions found — aborting.")
         sys.exit(1)
 
-    run_and_save(all_questions, run_rag,      llm, OUTPUT_DIR / "rag_results.jsonl",      "RAG")
-    run_and_save(all_questions, run_graphrag, llm, OUTPUT_DIR / "graphrag_results.jsonl", "GraphRAG")
+    # RAG runs on T5 (text-grounded) questions, GraphRAG runs on LLM (graph-grounded) ones.
+    if questions_t5:
+        run_and_save(questions_t5,  run_rag,      llm, OUTPUT_DIR / "rag_results.jsonl",      "RAG")
+    if questions_llm:
+        run_and_save(questions_llm, run_graphrag, llm, OUTPUT_DIR / "graphrag_results.jsonl", "GraphRAG")
