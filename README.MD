@@ -42,9 +42,14 @@ The project is structured in three sequential tasks:
 ├── task1_questions_generation/     # Task 1: question generation
 │   ├── data_loader.py              #   common dataset loaders + proportional sampler
 │   ├── generate_t5.py              #   text-based QG with valhalla/t5-small-qa-qg-hl
-│   └── generate_llm.py             #   graph-based QG with GPT-4o
+│   ├── generate_llm.py             #   graph-based QG with GPT-4o
+│   ├── extract.py                  #   helper to flatten T5 qa_pairs into a simple JSON
+│   └── output/                     #   generated QA pairs (gitignored)
 ├── task2_setup_rag/                # Task 2: RAG / GraphRAG pipelines (in progress)
-├── output_questions/               # Generated QA pairs (gitignored)
+│   ├── rag/                        #   text-chunking + dense-retrieval pipeline
+│   ├── graph_rag/                  #   knowledge-graph retrieval pipeline
+│   ├── llm/                        #   shared LLM interface (Qwen)
+│   └── run_pipelines.py            #   runs both pipelines on the task 1 questions
 └── .env                            # Local paths and API keys (not committed)
 
 ```
@@ -147,9 +152,10 @@ Generate graph-based questions with GPT-4o (requires a valid API key in `.env`):
 python task1_questions_generation/generate_llm.py
 ```
 
-Both scripts produce one `.jsonl` file per dataset in `output_questions/`,
-containing 100 entries each. Each line carries the originating sentence, the
-originating triples, and the generated question(s).
+Both scripts produce one `.jsonl` file per dataset in
+`task1_questions_generation/output/` (`questions_t5_*.jsonl` and
+`questions_llm_*.jsonl`), containing 100 entries each. Each line carries the
+originating sentence, the originating triples, and the generated question(s).
 
 
 ## References

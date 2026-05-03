@@ -1,5 +1,4 @@
 from pathlib import Path
-import importlib.util
 import json
 import os
 import sys
@@ -7,26 +6,15 @@ import numpy as np
 
 # ── paths ──────────────────────────────────────────────────────────────────────
 PROJECT_ROOT  = Path(__file__).parent.parent
-QUESTIONS_DIR = PROJECT_ROOT / "task1_questions_generation" / "output_questions"
+QUESTIONS_DIR = PROJECT_ROOT / "task1_questions_generation" / "output"
 OUTPUT_DIR    = Path(__file__).parent / "output"
 
-# ── load sub-modules (graph-rag folder has a hyphen, can't use normal import) ──
-def _load_module(name, path):
-    spec = importlib.util.spec_from_file_location(name, path)
-    mod  = importlib.util.module_from_spec(spec)
-    sys.modules[name] = mod
-    spec.loader.exec_module(mod)
-    return mod
+# ── imports (rag/, graph_rag/, llm/ are loaded as namespace packages) ──────────
+sys.path.insert(0, str(Path(__file__).parent))
 
-_base = Path(__file__).parent
-sys.path.append(str(_base / "rag"))
-sys.path.append(str(_base / "graph-rag"))
-sys.path.append(str(_base / "llm"))
-
-run_rag      = _load_module("rag_pipeline",     _base / "rag"       / "pipeline.py").run_rag
-run_graphrag = _load_module("graphrag_pipeline", _base / "graph-rag" / "pipeline.py").run_graphrag
-
-from llm_interface import QwenLLM
+from rag.pipeline       import run_rag
+from graph_rag.pipeline import run_graphrag
+from llm.llm_interface  import QwenLLM
 
 
 # ── JSON encoder to handle numpy types (e.g. float32 in RAG context/distances) ─
@@ -127,7 +115,7 @@ if __name__ == "__main__":
     print(f"Loaded {len(questions_t5)} T5 questions")
 
     questions_llm = []
-    for fname in ["questions_graph_lettria.jsonl", "questions_graph_oskgc.jsonl"]:
+    for fname in ["questions_llm_lettria.jsonl", "questions_llm_oskgc.jsonl"]:
         fpath = QUESTIONS_DIR / fname
         if fpath.exists():
             questions_llm += load_questions_llm(fpath)
@@ -140,4 +128,4 @@ if __name__ == "__main__":
         sys.exit(1)
 
     run_and_save(all_questions, run_rag,      llm, OUTPUT_DIR / "rag_results.jsonl",      "RAG")
-    run_and_save(all_questions, run_graphrag,  llm, OUTPUT_DIR / "graphrag_results.jsonl", "GraphRAG")
+    run_and_save(all_questions, run_graphrag, llm, OUTPUT_DIR / "graphrag_results.jsonl", "GraphRAG")

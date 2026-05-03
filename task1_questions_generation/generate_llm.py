@@ -194,20 +194,20 @@ def save_results(results, output_path):
 
 
 
-OUTPUT_DIR = Path(__file__).parent / "output_questions"
+OUTPUT_DIR = Path(__file__).parent / "output"
 SAMPLES_PER_DATASET = 100
 
 print("DATASET: LettrIA")
 lettria_sample = sample_proportional(load_lettria(lettria_dir), SAMPLES_PER_DATASET)
 print("Generating questions...")
 lettria_results = generate_questions(lettria_sample, "lettria")
-save_results(lettria_results, f"{OUTPUT_DIR}/questions_graph_lettria.jsonl")
+save_results(lettria_results, f"{OUTPUT_DIR}/questions_llm_lettria.jsonl")
 
 print("DATASET: OSKGC")
 oskgc_sample = sample_proportional(load_oskgc(oskgc_dir), SAMPLES_PER_DATASET)
 print("Generating questions...")
 oskgc_results = generate_questions(oskgc_sample, "oskgc")
-save_results(oskgc_results, f"{OUTPUT_DIR}/questions_graph_oskgc.jsonl")
+save_results(oskgc_results, f"{OUTPUT_DIR}/questions_llm_oskgc.jsonl")
 
 print("DONE")
 print(f"Total: {len(lettria_results) + len(oskgc_results)} graph entries processed")

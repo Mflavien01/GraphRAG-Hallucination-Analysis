@@ -1,10 +1,13 @@
-from graph_builder import build_graph
-from kg_loader import load_all_triples
-from statement_retriever import build_statement_index, retrieve_statements
-from pathlib import Path
 import json
 import os
 import sys
+from pathlib import Path
+
+sys.path.append(os.path.dirname(__file__)) # so siblings can be imported when loaded as a package
+
+from graph_builder import build_graph
+from kg_loader import load_all_triples
+from statement_retriever import build_statement_index, retrieve_statements
 
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.append(str(Path(__file__).parent.parent / "llm")) # add llm/ to path for llm_interface
