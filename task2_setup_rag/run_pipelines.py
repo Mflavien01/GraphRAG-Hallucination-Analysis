@@ -1,4 +1,5 @@
 from pathlib import Path
+import argparse
 import json
 import os
 import sys
@@ -9,12 +10,8 @@ PROJECT_ROOT  = Path(__file__).parent.parent
 QUESTIONS_DIR = PROJECT_ROOT / "task1_questions_generation" / "output"
 OUTPUT_DIR    = Path(__file__).parent / "output"
 
-# ── imports (rag/, graph_rag/, llm/ are loaded as namespace packages) ──────────
+# rag/, graph_rag/, llm/ are loaded as namespace packages
 sys.path.insert(0, str(Path(__file__).parent))
-
-from rag.pipeline       import run_rag
-from graph_rag.pipeline import run_graphrag
-from llm.llm_interface  import QwenLLM
 
 
 # ── JSON encoder to handle numpy types (e.g. float32 in RAG context/distances) ─
@@ -106,27 +103,65 @@ def run_and_save(questions, pipeline_fn, llm, output_file, pipeline_name):
     print(f"Saved {len(results)} results to {output_file}")
 
 
-# ── main ────────────────────────────────────────────────────────────────────────
-if __name__ == "__main__":
-    llm = QwenLLM(token=os.getenv("HF_TOKEN"))
+# ── individual pipelines ────────────────────────────────────────────────────────
+# Each one is wrapped in a function so the heavy imports (FAISS index build, model
+# download) only run for the pipeline you actually launched.
 
-    questions_t5 = load_questions_t5(QUESTIONS_DIR / "questions_t5_lettria.jsonl")
-    questions_t5 += load_questions_t5(QUESTIONS_DIR / "questions_t5_oskgc.jsonl")
-    print(f"Loaded {len(questions_t5)} T5 questions")
+def run_rag_pipeline(llm, limit=None):
+    """RAG on T5 questions only."""
+    from rag.pipeline import run_rag
 
-    questions_llm = []
+    questions  = load_questions_t5(QUESTIONS_DIR / "questions_t5_lettria.jsonl")
+    questions += load_questions_t5(QUESTIONS_DIR / "questions_t5_oskgc.jsonl")
+    print(f"Loaded {len(questions)} T5 questions")
+
+    if limit:
+        questions = questions[:limit]
+        print(f"  → truncated to {len(questions)} for this run")
+
+    if not questions:
+        print("No T5 questions found — skipping RAG.")
+        return
+
+    run_and_save(questions, run_rag, llm, OUTPUT_DIR / "rag_results.jsonl", "RAG")
+
+
+def run_graphrag_pipeline(llm, limit=None):
+    """GraphRAG on LLM (single-hop + multi-hop) questions only."""
+    from graph_rag.pipeline import run_graphrag
+
+    questions = []
     for fname in ["questions_llm_lettria.jsonl", "questions_llm_oskgc.jsonl"]:
         fpath = QUESTIONS_DIR / fname
         if fpath.exists():
-            questions_llm += load_questions_llm(fpath)
-    print(f"Loaded {len(questions_llm)} LLM graph questions")
+            questions += load_questions_llm(fpath)
+    print(f"Loaded {len(questions)} LLM graph questions")
 
-    if not questions_t5 and not questions_llm:
-        print("No questions found — aborting.")
-        sys.exit(1)
+    if limit:
+        questions = questions[:limit]
+        print(f"  → truncated to {len(questions)} for this run")
 
-    # RAG runs on T5 (text-grounded) questions, GraphRAG runs on LLM (graph-grounded) ones.
-    if questions_t5:
-        run_and_save(questions_t5,  run_rag,      llm, OUTPUT_DIR / "rag_results.jsonl",      "RAG")
-    if questions_llm:
-        run_and_save(questions_llm, run_graphrag, llm, OUTPUT_DIR / "graphrag_results.jsonl", "GraphRAG")
+    if not questions:
+        print("No LLM questions found — skipping GraphRAG.")
+        return
+
+    run_and_save(questions, run_graphrag, llm, OUTPUT_DIR / "graphrag_results.jsonl", "GraphRAG")
+
+
+# ── main ────────────────────────────────────────────────────────────────────────
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Run RAG and/or GraphRAG over the task 1 questions.")
+    parser.add_argument("pipeline", nargs="?", choices=["rag", "graphrag", "all"], default="all",
+                        help="which pipeline to run (default: all)")
+    parser.add_argument("--limit", type=int, default=None,
+                        help="cap the number of questions per pipeline (useful for smoke tests)")
+    args = parser.parse_args()
+
+    from llm.llm_interface import QwenLLM
+    llm = QwenLLM(token=os.getenv("HF_TOKEN"))
+
+    if args.pipeline in ("rag", "all"):
+        run_rag_pipeline(llm, limit=args.limit)
+
+    if args.pipeline in ("graphrag", "all"):
+        run_graphrag_pipeline(llm, limit=args.limit)
