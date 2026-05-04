@@ -1,8 +1,10 @@
 from pathlib import Path
+from dotenv import load_dotenv
 import argparse
 import json
 import os
 import sys
+import time
 import numpy as np
 
 # ── paths ──────────────────────────────────────────────────────────────────────
@@ -10,8 +12,37 @@ PROJECT_ROOT  = Path(__file__).parent.parent
 QUESTIONS_DIR = PROJECT_ROOT / "task1_questions_generation" / "output"
 OUTPUT_DIR    = Path(__file__).parent / "output"
 
+load_dotenv(PROJECT_ROOT / ".env")
+
 # rag/, graph_rag/, llm/ are loaded as namespace packages
 sys.path.insert(0, str(Path(__file__).parent))
+
+
+# ── retry helper ───────────────────────────────────────────────────────────────
+# When the Eurecom gateway is offline, calls fail with 404 ("model does not exist")
+# or with connection errors. Instead of crashing, we wait and retry — so you can
+# leave the script running and it will pick up automatically when the GPU is back.
+# Auth errors (401/403) are NOT retried since waiting won't fix them.
+def _call_with_retry(fn, *args, **kwargs):
+    delay = 30          # start small
+    delay_max = 300     # cap at 5 minutes
+    while True:
+        try:
+            return fn(*args, **kwargs)
+        except KeyboardInterrupt:
+            raise
+        except Exception as e:
+            status = getattr(e, "status_code", None)
+            if status in (401, 403):
+                print(f"\n  ✗ Authentication error ({status}) — fix EURECOM_LLM_KEY in .env, aborting.")
+                raise
+            print(f"\n  ⚠ LLM call failed: {type(e).__name__}: {str(e)[:200]}")
+            print(f"  → gateway likely offline. Sleeping {delay}s then retrying… (Ctrl-C to abort, progress is saved)")
+            try:
+                time.sleep(delay)
+            except KeyboardInterrupt:
+                raise
+            delay = min(delay * 2, delay_max)
 
 
 # ── JSON encoder to handle numpy types (e.g. float32 in RAG context/distances) ─
@@ -80,27 +111,47 @@ def load_questions_llm(file_path):
 
 # ── pipeline runner ─────────────────────────────────────────────────────────────
 def run_and_save(questions, pipeline_fn, llm, output_file, pipeline_name):
-    """Run pipeline_fn on each question and save results to output_file as JSONL."""
-    results = []
-    for i, q in enumerate(questions):
-        print(f"[{pipeline_name}] [{i+1}/{len(questions)}] {q['id']} ({q['hop_type']})")
-        output = pipeline_fn(q["question"], llm)
-        results.append({
-            "id":        q["id"],
-            "source_id": q["source_id"],
-            "dataset":   q["dataset"],
-            "category":  q["category"],
-            "hop_type":  q["hop_type"],
-            "question":  q["question"],
-            "answer":    q["answer"],
-            **output
-        })
+    """Run pipeline_fn on each question and append results to output_file as JSONL.
 
+    Each line is flushed right after the LLM call so a crash mid-run doesn't lose
+    completed work. On restart, questions already present in the file (matched on
+    id + hop_type) are skipped. LLM calls are wrapped in retry-with-backoff so the
+    script survives the gateway being offline.
+    Delete the file to start fresh.
+    """
     os.makedirs(OUTPUT_DIR, exist_ok=True)
-    with open(output_file, "w", encoding="utf-8") as f:
-        for r in results:
-            f.write(json.dumps(r, ensure_ascii=False, cls=_NumpyEncoder) + "\n")
-    print(f"Saved {len(results)} results to {output_file}")
+
+    done = set()
+    if output_file.exists():
+        with open(output_file, "r", encoding="utf-8") as f:
+            for line in f:
+                r = json.loads(line)
+                done.add((r["id"], r["hop_type"]))
+        if done:
+            print(f"  → resuming: {len(done)} results already in {output_file.name}")
+
+    written = 0
+    with open(output_file, "a", encoding="utf-8") as f:
+        for i, q in enumerate(questions):
+            if (q["id"], q["hop_type"]) in done:
+                continue
+            print(f"[{pipeline_name}] [{i+1}/{len(questions)}] {q['id']} ({q['hop_type']})")
+            output = _call_with_retry(pipeline_fn, q["question"], llm)
+            record = {
+                "id":        q["id"],
+                "source_id": q["source_id"],
+                "dataset":   q["dataset"],
+                "category":  q["category"],
+                "hop_type":  q["hop_type"],
+                "question":  q["question"],
+                "answer":    q["answer"],
+                **output
+            }
+            f.write(json.dumps(record, ensure_ascii=False, cls=_NumpyEncoder) + "\n")
+            f.flush()
+            written += 1
+
+    print(f"Wrote {written} new results to {output_file} (total: {len(done) + written})")
 
 
 # ── individual pipelines ────────────────────────────────────────────────────────
@@ -157,8 +208,12 @@ if __name__ == "__main__":
                         help="cap the number of questions per pipeline (useful for smoke tests)")
     args = parser.parse_args()
 
-    from llm.llm_interface import QwenLLM
-    llm = QwenLLM(token=os.getenv("HF_TOKEN"))
+    from llm.llm_interface import EurecomLLM
+    llm = EurecomLLM(
+        base_url=os.getenv("EURECOM_LLM_URL"),
+        api_key=os.getenv("EURECOM_LLM_KEY"),
+        model=os.getenv("EURECOM_LLM_MODEL", "Qwen/Qwen3-30B-A3B-Instruct-2507"),
+    )
 
     if args.pipeline in ("rag", "all"):
         run_rag_pipeline(llm, limit=args.limit)
