@@ -154,46 +154,55 @@ def run_and_save(questions, pipeline_fn, llm, output_file, pipeline_name):
     print(f"Wrote {written} new results to {output_file} (total: {len(done) + written})")
 
 
+# ── question loading ────────────────────────────────────────────────────────────
+# Both pipelines run on the *same* question set (T5 + LLM, lettria + oskgc) so that
+# MIRAGE in task 3 can compare RAG vs GraphRAG answers on identical inputs.
+def load_all_questions():
+    questions = []
+    for fname in ["questions_t5_lettria.jsonl", "questions_t5_oskgc.jsonl"]:
+        fpath = QUESTIONS_DIR / fname
+        if fpath.exists():
+            questions += load_questions_t5(fpath)
+    for fname in ["questions_llm_lettria.jsonl", "questions_llm_oskgc.jsonl"]:
+        fpath = QUESTIONS_DIR / fname
+        if fpath.exists():
+            questions += load_questions_llm(fpath)
+    return questions
+
+
 # ── individual pipelines ────────────────────────────────────────────────────────
 # Each one is wrapped in a function so the heavy imports (FAISS index build, model
 # download) only run for the pipeline you actually launched.
 
 def run_rag_pipeline(llm, limit=None):
-    """RAG on T5 questions only."""
     from rag.pipeline import run_rag
 
-    questions  = load_questions_t5(QUESTIONS_DIR / "questions_t5_lettria.jsonl")
-    questions += load_questions_t5(QUESTIONS_DIR / "questions_t5_oskgc.jsonl")
-    print(f"Loaded {len(questions)} T5 questions")
+    questions = load_all_questions()
+    print(f"Loaded {len(questions)} questions (T5 + LLM, both datasets)")
 
     if limit:
         questions = questions[:limit]
         print(f"  → truncated to {len(questions)} for this run")
 
     if not questions:
-        print("No T5 questions found — skipping RAG.")
+        print("No questions found — skipping RAG.")
         return
 
     run_and_save(questions, run_rag, llm, OUTPUT_DIR / "rag_results.jsonl", "RAG")
 
 
 def run_graphrag_pipeline(llm, limit=None):
-    """GraphRAG on LLM (single-hop + multi-hop) questions only."""
     from graph_rag.pipeline import run_graphrag
 
-    questions = []
-    for fname in ["questions_llm_lettria.jsonl", "questions_llm_oskgc.jsonl"]:
-        fpath = QUESTIONS_DIR / fname
-        if fpath.exists():
-            questions += load_questions_llm(fpath)
-    print(f"Loaded {len(questions)} LLM graph questions")
+    questions = load_all_questions()
+    print(f"Loaded {len(questions)} questions (T5 + LLM, both datasets)")
 
     if limit:
         questions = questions[:limit]
         print(f"  → truncated to {len(questions)} for this run")
 
     if not questions:
-        print("No LLM questions found — skipping GraphRAG.")
+        print("No questions found — skipping GraphRAG.")
         return
 
     run_and_save(questions, run_graphrag, llm, OUTPUT_DIR / "graphrag_results.jsonl", "GraphRAG")
