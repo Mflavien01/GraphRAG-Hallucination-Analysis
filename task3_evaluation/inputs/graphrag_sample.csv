@@ -1,0 +1,7 @@
+source,gen,id,question,ground_truth,hop_type,pipeline
+Arem arem -[origin]-> Indonesia Arem-arem -[country]-> Indonesia,Joko Widodo,lettria_001,Who is the leader of the country where Arem arem originates?,,t5,graphrag
+Darinka Dentcheva -[nationality]-> American Darinka Dentcheva -[birthDate]-> 1989-01-01 Darinka Dentcheva -[birthDate]-> 1958-01-01,Humboldt University,lettria_002,Where did Darinka Dentcheva study?,,t5,graphrag
+Arem arem -[origin]-> Indonesia arem-arem -[origin]-> Indonesia Arem-arem -[origin]-> Indonesia Arem-arem -[country]-> Indonesia,Indonesia,lettria_001,What is the origin of Arem arem?,,single_hop,graphrag
+Darinka Dentcheva -[citizenship]-> United States,United States,lettria_002,What is the citizenship of Darinka Dentcheva?,,single_hop,graphrag
+Darinka Dentcheva -[citizenship]-> United States of America Darinka Dentcheva -[citizenship]-> US Darinka Dentcheva -[citizenship]-> United States,Andrzej Piotr Ruszczyński,lettria_002,Who influenced the person with citizenship in the United States?,,multi_hop,graphrag
+"Agustin Barboza -[deathPlace]-> Paraguay Agustin Barboza -[deathPlace]-> Asuncion Agustin Barboza -[deathPlace]-> Asuncion, Paraguay Agustin Barboza -[birthPlace]-> Paraguay Agustin Barboza -[birthPlace]-> Asunción",Gran Asunción,lettria_003,What larger area is the place where Agustin Barboza died part of?,,multi_hop,graphrag
