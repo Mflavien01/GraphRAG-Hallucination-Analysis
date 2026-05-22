@@ -86,3 +86,8 @@ if __name__ == "__main__":
         output_path="task3_evaluation/inputs/graphrag_input.csv",
         pipeline_name="graphrag"
     )
+    convert_to_mirage(
+        results_path="task2_setup_rag/output/rag_hybrid_results.jsonl",
+        output_path="task3_evaluation/inputs/rag_hybrid_input.csv",
+        pipeline_name="rag_hybrid"
+    )

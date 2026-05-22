@@ -95,5 +95,24 @@ def analyze():
         print(f"score >= {threshold}: RAG={rag_pct:.1%}  GraphRAG={grag_pct:.1%}")
 
 
+def compare_hybrid():
+    """Compare RAG baseline vs RAG hybrid pour mesurer l'impact du BM25."""
+    print_section("RAG BASELINE vs RAG HYBRID (BM25)")
+
+    baseline = load_scores("task3_evaluation/outputs/factcc_rag")
+    hybrid   = load_scores("task3_evaluation/outputs/factcc_rag_hybrid")
+
+    print(f"\nBaseline RAG : score={baseline['score'].mean():.4f}  halluc={( baseline['score'] < 0.5).mean():.1%}")
+    print(f"Hybrid  RAG  : score={hybrid['score'].mean():.4f}  halluc={(hybrid['score'] < 0.5).mean():.1%}")
+    print(f"Delta        : {hybrid['score'].mean() - baseline['score'].mean():+.4f}")
+
+    print("\n--- Par hop_type ---")
+    for hop in ['t5', 'single_hop', 'multi_hop']:
+        b = baseline[baseline['hop_type'] == hop]['score'].mean()
+        h = hybrid[hybrid['hop_type'] == hop]['score'].mean()
+        print(f"  {hop:12s}  baseline={b:.4f}  hybrid={h:.4f}  Δ={h-b:+.4f}")
+        
+        
 if __name__ == "__main__":
     analyze()
+    compare_hybrid()

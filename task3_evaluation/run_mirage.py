@@ -19,6 +19,8 @@ def run(input_path: str, output_dir: str):
         dataset=input_path,
         source_col="source",
         gen_col="gen",
+        truncation=True,
+        padding=True,
         save_result_dataset_folder_path=output_dir
     )
     print(f"Done — {result.num_rows} entries scored")
@@ -29,8 +31,7 @@ def run(input_path: str, output_dir: str):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--pipeline", choices=["rag", "graphrag", "both"],
-                        default="both")
+    parser.add_argument("--pipeline", choices=["rag", "graphrag", "hybrid", "both"], default="both")
     args = parser.parse_args()
 
     if args.pipeline in ("rag", "both"):
@@ -42,4 +43,9 @@ if __name__ == "__main__":
         run(
             input_path="task3_evaluation/inputs/graphrag_input.csv",
             output_dir="task3_evaluation/outputs/factcc_graphrag"
+        )
+    if args.pipeline in ("hybrid", "both"):
+        run(
+            input_path="task3_evaluation/inputs/rag_hybrid_input.csv",
+            output_dir="task3_evaluation/outputs/factcc_rag_hybrid"
         )
