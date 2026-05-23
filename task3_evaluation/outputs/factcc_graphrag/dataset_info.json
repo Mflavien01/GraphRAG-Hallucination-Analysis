@@ -3,9 +3,9 @@
   "citation": "",
   "config_name": "default",
   "dataset_name": "csv",
-  "dataset_size": 178844,
+  "dataset_size": 220433,
   "description": "",
-  "download_size": 152832,
+  "download_size": 195670,
   "features": {
     "source": {
       "dtype": "large_string",
@@ -24,7 +24,7 @@
       "_type": "Value"
     },
     "ground_truth": {
-      "dtype": "float64",
+      "dtype": "large_string",
       "_type": "Value"
     },
     "hop_type": {
@@ -52,11 +52,11 @@
   },
   "homepage": "",
   "license": "",
-  "size_in_bytes": 331676,
+  "size_in_bytes": 416103,
   "splits": {
     "train": {
       "name": "train",
-      "num_bytes": 178844,
+      "num_bytes": 220433,
       "num_examples": 547,
       "dataset_name": "csv"
     }
