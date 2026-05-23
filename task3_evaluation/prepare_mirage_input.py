@@ -43,25 +43,57 @@ def extract_graphrag_source(context) -> str:
     return str(context)
 
 
-def convert_to_mirage(results_path, output_path, pipeline_name):
+def build_source_index():
+    """
+    Build two lookup indexes from Task 1 question files:
+      - t5_index:  id → original sentence  (for hop_type="t5")
+      - llm_index: id → original sentence  (for hop_type="single_hop" / "multi_hop")
+
+    Two separate indexes are needed because for OSKGC, the same id exists in both the
+    T5 and LLM question files but refers to different source documents.
+    """
+    base = Path("task1_questions_generation/output")
+
+    t5_index = {}
+    for fname in ("questions_t5_lettria.jsonl", "questions_t5_oskgc.jsonl"):
+        for e in load_jsonl(base / fname):
+            t5_index[e["id"]] = e.get("sentence", "")
+
+    llm_index = {}
+    for fname in ("questions_llm_lettria.jsonl", "questions_llm_oskgc.jsonl"):
+        for e in load_jsonl(base / fname):
+            llm_index[e["id"]] = e.get("original_sent", "")
+
+    return t5_index, llm_index
+
+
+def get_original_source(entry, t5_index, llm_index):
+    """Return the original source sentence for a pipeline entry."""
+    hop = entry.get("hop_type", "t5")
+    eid = entry["id"]
+    if hop == "t5":
+        source = t5_index.get(eid, "")
+    else:  # single_hop or multi_hop
+        source = llm_index.get(eid, "")
+    if not source:
+        print(f"  [WARNING] No source found for id={eid}, hop_type={hop}")
+    return source
+
+
+def convert_to_mirage(results_path, output_path, pipeline_name, t5_index, llm_index):
     '''Convert result JSONL from task2_setup_rag into CSV for MIRAGE (FactCC)'''
     entries = load_jsonl(results_path)
     rows = []
 
     for entry in entries:
-        ctx = entry.get("context", "")
-
-        if pipeline_name == "rag":
-            source = extract_rag_source(ctx)
-        else:
-            source = extract_graphrag_source(ctx)
+        source = get_original_source(entry, t5_index, llm_index)
 
         rows.append({
             "source":       source,
-            "gen":          entry["answer"],
+            "gen":          entry["llm_answer"],
             "id":           entry["id"],
             "question":     entry["question"],
-            "ground_truth": entry.get("ground_truth", ""),
+            "ground_truth": entry.get("answer"),
             "hop_type":     entry.get("hop_type", "unknown"),
             "pipeline":     pipeline_name,
         })
@@ -76,18 +108,26 @@ def convert_to_mirage(results_path, output_path, pipeline_name):
 
 
 if __name__ == "__main__":
+    t5_index, llm_index = build_source_index()
+
     convert_to_mirage(
         results_path="task2_setup_rag/output/rag_results.jsonl",
         output_path="task3_evaluation/inputs/rag_input.csv",
-        pipeline_name="rag"
+        pipeline_name="rag",
+        t5_index=t5_index,
+        llm_index=llm_index,
     )
     convert_to_mirage(
         results_path="task2_setup_rag/output/graphrag_results.jsonl",
         output_path="task3_evaluation/inputs/graphrag_input.csv",
-        pipeline_name="graphrag"
+        pipeline_name="graphrag",
+        t5_index=t5_index,
+        llm_index=llm_index,
     )
     convert_to_mirage(
         results_path="task2_setup_rag/output/rag_hybrid_results.jsonl",
         output_path="task3_evaluation/inputs/rag_hybrid_input.csv",
-        pipeline_name="rag_hybrid"
+        pipeline_name="rag_hybrid",
+        t5_index=t5_index,
+        llm_index=llm_index,
     )
