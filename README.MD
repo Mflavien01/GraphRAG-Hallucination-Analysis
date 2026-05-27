@@ -20,11 +20,14 @@ The project is structured in three sequential tasks:
    balanced set of single-hop and multi-step questions, half generated from the
    source text (fine-tuned T5 model) and half from the Knowledge Graph
    (strictly-prompted LLM).
-2. **Task 2 — Pipelines.** Implement a classical RAG pipeline and a GraphRAG
-   pipeline sharing the same generator LLM on the same source data.
-3. **Task 3 — Evaluation.** Run both pipelines on the Task 1 question set,
-   evaluate them quantitatively with the MIRAGE framework, and categorise the
-   hallucinations qualitatively.
+2. **Task 2 — Pipelines.** Implement a classical RAG pipeline, a hybrid RAG
+   pipeline (dense + BM25), and a GraphRAG pipeline, all sharing the same
+   generator LLM (Qwen3 served through the Eurecom gateway) on the same source
+   data.
+3. **Task 3 — Evaluation.** Run all pipelines on the Task 1 question set,
+   evaluate them quantitatively with the MIRAGE framework (FactCC faithfulness
+   + SBERT cosine sanity check), and categorise the hallucinations
+   qualitatively.
 
 
 
@@ -32,26 +35,13 @@ The project is structured in three sequential tasks:
 
 ```
 .
-├── data/                           # Datasets (gitignored, see below)
-│   ├── Text2KGBench_LettrIA/
-│   └── OSKGC/
-├── stats/                          # Category-level distribution of each dataset
-│   ├── stats_Text2KG.py
-│   ├── stats_OSKGC.py
-│   └── results.md
-├── task1_questions_generation/     # Task 1: question generation
-│   ├── data_loader.py              #   common dataset loaders + proportional sampler
-│   ├── generate_t5.py              #   text-based QG with valhalla/t5-small-qa-qg-hl
-│   ├── generate_llm.py             #   graph-based QG with GPT-4o
-│   ├── extract.py                  #   helper to flatten T5 qa_pairs into a simple JSON
-│   └── output/                     #   generated QA pairs (gitignored)
-├── task2_setup_rag/                # Task 2: RAG / GraphRAG pipelines (in progress)
-│   ├── rag/                        #   text-chunking + dense-retrieval pipeline
-│   ├── graph_rag/                  #   knowledge-graph retrieval pipeline
-│   ├── llm/                        #   shared LLM interface (Qwen)
-│   └── run_pipelines.py            #   runs both pipelines on the task 1 questions
-└── .env                            # Local paths and API keys (not committed)
-
+├── data/                          # Datasets (gitignored, see below)
+├── stats/                         # Category-level dataset distributions
+├── task1_questions_generation/    # Task 1: T5 + LLM question generation
+├── task2_setup_rag/               # Task 2: RAG, hybrid RAG, GraphRAG pipelines
+├── task3_evaluation/              # Task 3: MIRAGE / FactCC evaluation
+├── requirements.txt
+└── .env                           # Local paths and API keys (not committed)
 ```
 
 ## Setup
@@ -69,14 +59,16 @@ cd GraphRAG-Hallucination-Analysis
 pip install -r requirements.txt
 ```
 
-The main dependencies are :
+The main dependencies are:
 
-- `transformers` 
-- `torch`
-- `openai`
-- `pandas`
-- `numpy`
-- `python-dotenv`
+- `transformers`, `torch`, `sentencepiece`
+- `sentence-transformers`, `faiss-cpu`
+- `openai` (Task 1 graph-based QG with GPT-4o)
+- `rdflib`, `networkx` (GraphRAG)
+- `langchain-*` (chunking + experimental graph builders)
+- `rapidfuzz`, `json-repair`
+- `pandas`, `numpy`, `python-dotenv`
+- `datasets` (HuggingFace, used by MIRAGE)
 
 ### 3. Download the datasets
 
@@ -96,7 +88,7 @@ data/Text2KGBench_LettrIA/
 │   └── ground_truth.jsonl
 ├── ...
 └── writtenwork/
-└── ground_truth.jsonl
+    └── ground_truth.jsonl
 ```
 Each `ground_truth.jsonl` file contains one JSON object per line, pairing a
 source sentence with its list of typed triples.
@@ -120,8 +112,13 @@ Create a `.env` file at the root of the repository:
 LETTRIA_DIR=data/Text2KGBench_LettrIA
 OSKGC_DIR=data/OSKGC/benchmark/data/dev
 
-# OpenAI API
-OPENAI_API_KEY=your_key_here
+# OpenAI API (Task 1 graph-based QG with GPT-4o)
+OPENAI_API_KEY=your_openai_key_here
+
+# Eurecom LLM gateway (Task 2 generator LLM, Qwen3)
+EURECOM_LLM_URL=https://...
+EURECOM_LLM_KEY=your_eurecom_key_here
+EURECOM_LLM_MODEL=qwen3-instruct
 ```
 
 ## Usage
@@ -157,6 +154,63 @@ Both scripts produce one `.jsonl` file per dataset in
 `questions_llm_*.jsonl`), containing 100 entries each. Each line carries the
 originating sentence, the originating triples, and the generated question(s).
 
+### Task 2 — RAG / GraphRAG pipelines
+
+Run all pipelines (classical RAG, hybrid RAG, GraphRAG) on the four Task 1
+question files. The script is checkpointed: a crash or gateway outage can be
+resumed by re-running the same command.
+
+```bash
+python task2_setup_rag/run_pipelines.py
+```
+
+Outputs land in `task2_setup_rag/output/`:
+- `rag_results.jsonl` — dense vector retrieval
+- `rag_hybrid_results.jsonl` — dense + BM25 fusion
+- `graphrag_results.jsonl` — ontology-constrained graph traversal
+
+Each line contains the question, the retrieved context, the generated answer
+(`llm_answer`), and the ground-truth answer, joined by `source_id` to the
+originating sentence in Task 1.
+
+### Task 3 — MIRAGE evaluation
+
+**Step 1 — build MIRAGE-ready CSVs** from the Task 2 outputs. The `source`
+column holds the original ground-truth sentence (not the retrieved context),
+the `gen` column holds the LLM-generated answer (`llm_answer`), and
+`ground_truth` holds the reference answer.
+
+```bash
+python task3_evaluation/prepare_mirage_input.py
+```
+
+Outputs: `task3_evaluation/inputs/{rag,graphrag,rag_hybrid}_input.csv`.
+
+**Step 2 — run FactCC** on each pipeline. The script appends a
+`faithfulness = 1 − score` column to the HuggingFace dataset, since MIRAGE's
+raw `score` is P(hallucination), not P(faithful).
+
+```bash
+python task3_evaluation/run_mirage.py --pipeline both       # rag + graphrag
+python task3_evaluation/run_mirage.py --pipeline hybrid     # rag_hybrid only
+```
+
+Outputs land in `task3_evaluation/outputs/factcc_{rag,graphrag,rag_hybrid}/`
+as HuggingFace Arrow datasets.
+
+**Step 3 — analyse and compare.** Global mean faithfulness, per-`hop_type`
+breakdown, critical-case rate, faithfulness distribution by threshold,
+hybrid-vs-baseline comparison, and the Pearson(faithfulness, sbert_cosine)
+sanity check.
+
+```bash
+python task3_evaluation/analyze_results.py
+```
+
+The standalone diagnostics (`diagnostic_factcc.py`, `diagnostic_sbert.py`) are
+kept in-repo for traceability of the FactCC orientation fix (see
+[FactCC score direction memo](task3_evaluation/)).
+
 
 ## References
 
@@ -172,3 +226,9 @@ originating sentence, the originating triples, and the generated question(s).
 - **MIRAGE** — Vendeville et al. *A Framework for the Quantitative Evaluation of
   Hallucinations in RAG*.
   [repository](https://github.com/bVendeville/MIRAGE)
+- **FactCC** — Kryściński et al. *Evaluating the Factual Consistency of
+  Abstractive Text Summarization*.
+  [model](https://huggingface.co/manueldeprada/FactCC)
+- **SBERT** — Reimers and Gurevych. *Sentence-BERT: Sentence Embeddings using
+  Siamese BERT-Networks*.
+  [sentence-transformers](https://www.sbert.net/)

@@ -1,18 +1,30 @@
-rdflib
-pyvis
+# Core
 python-dotenv
+pandas
+numpy
+
+# Task 1 — question generation
 openai
 transformers
 torch
 sentencepiece
-json-repair>=0.59.4
-networkx>=3.6.1
 langchain-core>=1.2.31
 langchain-text-splitters>=0.3.8
-langchain-google-vertexai>=3.2.2
-langchain-experimental>=0.4.1
-langchain-community>=0.4.1
-rapidfuzz
+
+# Task 2 — RAG / GraphRAG pipelines
 sentence-transformers
 faiss-cpu
+rank_bm25
+rdflib
+networkx>=3.6.1
+pyvis
+rapidfuzz
+json-repair>=0.59.4
 huggingface_hub
+
+# Task 3 — MIRAGE evaluation (incl. vendored mirage_lib deps)
+datasets
+scikit-learn
+matplotlib
+plotly
+spacy
