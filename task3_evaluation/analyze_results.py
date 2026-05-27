@@ -1,15 +1,20 @@
-"""  
+"""
 Task 3 - Comparative analysis of FactCC scores.
-FactCC score: 1 = consistent with context / 0 = hallucination
-prediction: 1 = CORRECT / 0 = HALLUCINATED (according to the model)
-We compare RAG vs GraphRAG on 3 axes:
-1. Overall score
-2. By hop_type (t5 / single_hop / multi_hop)
-3. "Hallucination" rate (prediction == 0)
 
+MIRAGE writes `score = P(INCORRECT) = P(hallucination)`.
+This script analyses the inverse `faithfulness = P(CORRECT) = 1 - score`, so
+all metrics use the natural "higher = better" convention.
+
+We compare RAG vs GraphRAG on:
+1. Overall faithfulness (mean, std, hallucination rate at 0.5 threshold)
+2. By hop_type (t5 / single_hop / multi_hop)
+3. Critical cases (faithfulness < 0.3)
+4. Faithfulness distribution by threshold
+5. SBERT cosine similarity (gen vs ground_truth)
+6. Sanity check: Pearson(faithfulness, sbert_cosine) — must be positive
 """
 
-import numpy as np  # noqa: F401 — used implicitly via SBERT numpy arrays
+import numpy as np
 import pandas as pd
 from datasets import load_from_disk
 from pathlib import Path
@@ -17,9 +22,13 @@ from sentence_transformers import SentenceTransformer
 
 
 def load_scores(output_dir: str) -> pd.DataFrame:
-    """Load the HuggingFace dataset produced by MIRAGE."""
+    """Load the HuggingFace dataset produced by MIRAGE.
+    Adds `faithfulness = 1 - score` if not already present on disk."""
     ds = load_from_disk(output_dir)
-    return ds.to_pandas()
+    df = ds.to_pandas()
+    if "faithfulness" not in df.columns:
+        df["faithfulness"] = 1.0 - df["score"]
+    return df
 
 
 def print_section(title: str):
@@ -79,42 +88,42 @@ def analyze(model: SentenceTransformer):
     rag_df  = add_sbert_cosine(rag_df,  model)
     grag_df = add_sbert_cosine(grag_df, model)
 
-    # ── 1. Global Score ──────────────────────────────────
-    print_section("GLOBAL SCORE")
+    # ── 1. Global Faithfulness ───────────────────────────
+    print_section("GLOBAL FAITHFULNESS")
     summary = pd.DataFrame({
-        "mean_score":       [rag_df["score"].mean(),       grag_df["score"].mean()],
-        "std_score":        [rag_df["score"].std(),        grag_df["score"].std()],
-        "halluc_rate": [(rag_df["score"] < 0.5).mean(),
-                (grag_df["score"] < 0.5).mean()],
+        "mean_faithfulness": [rag_df["faithfulness"].mean(),  grag_df["faithfulness"].mean()],
+        "std_faithfulness":  [rag_df["faithfulness"].std(),   grag_df["faithfulness"].std()],
+        "halluc_rate":       [(rag_df["faithfulness"] < 0.5).mean(),
+                              (grag_df["faithfulness"] < 0.5).mean()],
     }, index=["RAG", "GraphRAG"])
     print(summary.round(4))
 
     # ── 2. By hop_type ────────────────────────────────────
-    print_section("BY HOP_TYPE — AVERAGE SCORE")
+    print_section("BY HOP_TYPE — MEAN FAITHFULNESS")
     for name, df in [("RAG", rag_df), ("GraphRAG", grag_df)]:
         print(f"\n{name}:")
         g = df.groupby("hop_type").agg(
-            mean_score=("score", "mean"),
-            halluc_rate=("score", lambda x: (x < 0.5).mean()),
-            count=("score", "count")
+            mean_faithfulness=("faithfulness", "mean"),
+            halluc_rate=("faithfulness", lambda x: (x < 0.5).mean()),
+            count=("faithfulness", "count")
         ).round(4)
         print(g)
 
-    # ── 3. Comparison by hop_type  ────────────
+    # ── 3. Comparison by hop_type ─────────────────────────
     print_section("DELTA GraphRAG - RAG (by hop_type)")
-    rag_hop  = rag_df.groupby("hop_type")["score"].mean()
-    grag_hop = grag_df.groupby("hop_type")["score"].mean()
-    delta = (grag_hop - rag_hop).rename("delta_score").round(4)
+    rag_hop  = rag_df.groupby("hop_type")["faithfulness"].mean()
+    grag_hop = grag_df.groupby("hop_type")["faithfulness"].mean()
+    delta = (grag_hop - rag_hop).rename("delta_faithfulness").round(4)
     print(delta)
-    print("\n(negative = GraphRAG more hallucinatory than RAG on this type)")
+    print("\n(positive = GraphRAG more faithful than RAG on this type)")
 
-    # ── 4. Critical cases: very low score (<0.3) ───────────
-    print_section("CRITICAL CASES (score < 0.3)")
+    # ── 4. Critical cases: very low faithfulness (<0.3) ──
+    print_section("CRITICAL CASES (faithfulness < 0.3)")
     for name, df in [("RAG", rag_df), ("GraphRAG", grag_df)]:
-        bad = df[df["score"] < 0.3]
+        bad = df[df["faithfulness"] < 0.3]
         print(f"\n{name}: {len(bad)}/{len(df)} critical entries")
         if len(bad):
-            print(bad[["id","hop_type","question","gen","score"]].head(5).to_string(index=False))
+            print(bad[["id","hop_type","question","gen","faithfulness"]].head(5).to_string(index=False))
 
     # ── 5. CSV export for the report ─────────────────────
     out = Path("task3_evaluation/outputs/")
@@ -140,15 +149,15 @@ def analyze(model: SentenceTransformer):
         df["gt_is_numeric"] = df["ground_truth"].apply(is_numeric_answer)
         num = df[df["gt_is_numeric"]]
         txt = df[~df["gt_is_numeric"]]
-        print(f"\n{name} — Numeric gt ({len(num)} entries): score={num['score'].mean():.4f}")
-        print(f"{name} — Text    gt ({len(txt)} entries): score={txt['score'].mean():.4f}")
+        print(f"\n{name} — Numeric gt ({len(num)} entries): faithfulness={num['faithfulness'].mean():.4f}")
+        print(f"{name} — Text    gt ({len(txt)} entries): faithfulness={txt['faithfulness'].mean():.4f}")
 
-    # ── 7. Score distribution (for the report) ──────
-    print_section("SCORE DISTRIBUTION")
+    # ── 7. Faithfulness distribution (for the report) ──────
+    print_section("FAITHFULNESS DISTRIBUTION")
     for threshold in [0.3, 0.5, 0.7, 0.9]:
-        rag_pct  = (rag_df["score"]  >= threshold).mean()
-        grag_pct = (grag_df["score"] >= threshold).mean()
-        print(f"score >= {threshold}: RAG={rag_pct:.1%}  GraphRAG={grag_pct:.1%}")
+        rag_pct  = (rag_df["faithfulness"]  >= threshold).mean()
+        grag_pct = (grag_df["faithfulness"] >= threshold).mean()
+        print(f"faithfulness >= {threshold}: RAG={rag_pct:.1%}  GraphRAG={grag_pct:.1%}")
 
     # ── 8. Sentence-BERT Cosine Similarity ───────────────────
     print_section("SENTENCE-BERT COSINE SIMILARITY  (gen ↔ ground_truth)")
@@ -169,6 +178,17 @@ def analyze(model: SentenceTransformer):
         ).round(4)
         print(g)
 
+    # ── 9. Sanity check: correlation faithfulness ↔ SBERT ──
+    # If faithfulness is correctly oriented (higher = better), the Pearson
+    # correlation with SBERT(gen, ground_truth) must be POSITIVE.
+    # With the pre-fix interpretation (score = P(halluc) misread as P(faithful))
+    # this correlation was about −0.33.
+    print_section("SANITY CHECK — Pearson(faithfulness, sbert_cosine)")
+    for name, df in [("RAG", rag_df), ("GraphRAG", grag_df)]:
+        sub = df.dropna(subset=["sbert_cosine"])
+        r = sub["faithfulness"].corr(sub["sbert_cosine"])
+        print(f"  {name:8s}  r = {r:+.4f}   (n={len(sub)})")
+
 
 def compare_hybrid(model: SentenceTransformer):
     """Compare RAG baseline vs RAG hybrid pour mesurer l'impact du BM25."""
@@ -180,14 +200,14 @@ def compare_hybrid(model: SentenceTransformer):
     baseline = add_sbert_cosine(baseline, model)
     hybrid   = add_sbert_cosine(hybrid,   model)
 
-    print(f"\nBaseline RAG : score={baseline['score'].mean():.4f}  halluc={( baseline['score'] < 0.5).mean():.1%}")
-    print(f"Hybrid  RAG  : score={hybrid['score'].mean():.4f}  halluc={(hybrid['score'] < 0.5).mean():.1%}")
-    print(f"Delta        : {hybrid['score'].mean() - baseline['score'].mean():+.4f}")
+    print(f"\nBaseline RAG : faithfulness={baseline['faithfulness'].mean():.4f}  halluc={(baseline['faithfulness'] < 0.5).mean():.1%}")
+    print(f"Hybrid  RAG  : faithfulness={hybrid['faithfulness'].mean():.4f}  halluc={(hybrid['faithfulness']  < 0.5).mean():.1%}")
+    print(f"Delta        : {hybrid['faithfulness'].mean() - baseline['faithfulness'].mean():+.4f}")
 
     print("\n--- Par hop_type ---")
     for hop in ['t5', 'single_hop', 'multi_hop']:
-        b = baseline[baseline['hop_type'] == hop]['score'].mean()
-        h = hybrid[hybrid['hop_type'] == hop]['score'].mean()
+        b = baseline[baseline['hop_type'] == hop]['faithfulness'].mean()
+        h = hybrid[hybrid['hop_type'] == hop]['faithfulness'].mean()
         print(f"  {hop:12s}  baseline={b:.4f}  hybrid={h:.4f}  Δ={h-b:+.4f}")
 
     # ── SENTENCE-BERT — baseline vs hybrid ──────────────────

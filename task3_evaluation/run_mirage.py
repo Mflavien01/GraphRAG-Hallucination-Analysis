@@ -5,11 +5,30 @@
 """
 
 import sys
+import shutil
+import tempfile
 import argparse
 from pathlib import Path
 
+from datasets import load_from_disk
+
 sys.path.insert(0, "task3_evaluation/mirage_lib")
 from mirage import factcc
+
+
+def add_faithfulness_and_save(output_dir: str):
+    # MIRAGE writes `score = P(INCORRECT) = P(hallucination)`. Expose the inverse
+    # `faithfulness = P(CORRECT)` so downstream code uses the natural "higher = better"
+    # convention. Save via tmpdir + swap because save_to_disk cannot overwrite the
+    # arrow files it's currently reading from.
+    ds = load_from_disk(output_dir)
+    ds = ds.add_column("faithfulness", [1.0 - s for s in ds["score"]])
+    tmp = tempfile.mkdtemp(prefix="factcc_swap_", dir=str(Path(output_dir).parent))
+    ds.save_to_disk(tmp)
+    del ds  # release file handles before swap
+    shutil.rmtree(output_dir)
+    shutil.move(tmp, output_dir)
+    return load_from_disk(output_dir)
 
 
 def run(input_path: str, output_dir: str):
@@ -23,9 +42,11 @@ def run(input_path: str, output_dir: str):
         padding=True,
         save_result_dataset_folder_path=output_dir
     )
+    del result  # release handles on the freshly-saved arrow files
+    result = add_faithfulness_and_save(output_dir)
     print(f"Done — {result.num_rows} entries scored")
     print(f"Columns: {result.column_names}")
-    print(f"Mean score: {sum(result['score']) / len(result['score']):.4f}")
+    print(f"Mean faithfulness: {sum(result['faithfulness']) / len(result['faithfulness']):.4f}")
     return result
 
 
