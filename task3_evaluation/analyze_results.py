@@ -20,15 +20,31 @@ from datasets import load_from_disk
 from pathlib import Path
 from sentence_transformers import SentenceTransformer
 
+from prepare_mirage_input import is_coverage_error
+
 
 def load_scores(output_dir: str) -> pd.DataFrame:
     """Load the HuggingFace dataset produced by MIRAGE.
-    Adds `faithfulness = 1 - score` if not already present on disk."""
+    Adds `faithfulness = 1 - score` if not already present on disk.
+    Adds `is_coverage_error` (recomputed from `gen`) if absent, so outputs
+    generated before the abstention-flag change are still handled correctly."""
     ds = load_from_disk(output_dir)
     df = ds.to_pandas()
     if "faithfulness" not in df.columns:
         df["faithfulness"] = 1.0 - df["score"]
+    if "is_coverage_error" not in df.columns:
+        df["is_coverage_error"] = df["gen"].apply(is_coverage_error)
+    else:
+        df["is_coverage_error"] = df["is_coverage_error"].astype(bool)
     return df
+
+
+def split_coverage(df: pd.DataFrame):
+    """Split into (answered, coverage_errors). Faithfulness metrics use `answered`
+    only; abstentions are reported separately as a coverage-error rate."""
+    answered = df[~df["is_coverage_error"]].copy()
+    coverage = df[df["is_coverage_error"]].copy()
+    return answered, coverage
 
 
 def print_section(title: str):
@@ -88,19 +104,37 @@ def analyze(model: SentenceTransformer):
     rag_df  = add_sbert_cosine(rag_df,  model)
     grag_df = add_sbert_cosine(grag_df, model)
 
-    # ── 1. Global Faithfulness ───────────────────────────
-    print_section("GLOBAL FAITHFULNESS")
+    # ── 0. Coverage errors (abstentions) ─────────────────
+    # Rows where the model declined to answer for lack of context. FactCC still
+    # scored them, but an abstention is neither faithful nor hallucinated, so we
+    # report it separately and EXCLUDE it from every faithfulness statistic below.
+    print_section("COVERAGE ERROR RATE (abstentions, excluded from faithfulness)")
+    cov_summary = pd.DataFrame({
+        "n_total":          [len(rag_df),                       len(grag_df)],
+        "n_coverage_error": [int(rag_df["is_coverage_error"].sum()),
+                             int(grag_df["is_coverage_error"].sum())],
+        "coverage_error_rate": [rag_df["is_coverage_error"].mean(),
+                                grag_df["is_coverage_error"].mean()],
+    }, index=["RAG", "GraphRAG"])
+    print(cov_summary.round(4))
+
+    rag_ans,  _ = split_coverage(rag_df)
+    grag_ans, _ = split_coverage(grag_df)
+
+    # ── 1. Global Faithfulness (answered rows only) ──────
+    print_section("GLOBAL FAITHFULNESS (coverage errors excluded)")
     summary = pd.DataFrame({
-        "mean_faithfulness": [rag_df["faithfulness"].mean(),  grag_df["faithfulness"].mean()],
-        "std_faithfulness":  [rag_df["faithfulness"].std(),   grag_df["faithfulness"].std()],
-        "halluc_rate":       [(rag_df["faithfulness"] < 0.5).mean(),
-                              (grag_df["faithfulness"] < 0.5).mean()],
+        "n_answered":        [len(rag_ans),                len(grag_ans)],
+        "mean_faithfulness": [rag_ans["faithfulness"].mean(),  grag_ans["faithfulness"].mean()],
+        "std_faithfulness":  [rag_ans["faithfulness"].std(),   grag_ans["faithfulness"].std()],
+        "halluc_rate":       [(rag_ans["faithfulness"] < 0.5).mean(),
+                              (grag_ans["faithfulness"] < 0.5).mean()],
     }, index=["RAG", "GraphRAG"])
     print(summary.round(4))
 
     # ── 2. By hop_type ────────────────────────────────────
-    print_section("BY HOP_TYPE — MEAN FAITHFULNESS")
-    for name, df in [("RAG", rag_df), ("GraphRAG", grag_df)]:
+    print_section("BY HOP_TYPE — MEAN FAITHFULNESS (coverage errors excluded)")
+    for name, df in [("RAG", rag_ans), ("GraphRAG", grag_ans)]:
         print(f"\n{name}:")
         g = df.groupby("hop_type").agg(
             mean_faithfulness=("faithfulness", "mean"),
@@ -111,15 +145,15 @@ def analyze(model: SentenceTransformer):
 
     # ── 3. Comparison by hop_type ─────────────────────────
     print_section("DELTA GraphRAG - RAG (by hop_type)")
-    rag_hop  = rag_df.groupby("hop_type")["faithfulness"].mean()
-    grag_hop = grag_df.groupby("hop_type")["faithfulness"].mean()
+    rag_hop  = rag_ans.groupby("hop_type")["faithfulness"].mean()
+    grag_hop = grag_ans.groupby("hop_type")["faithfulness"].mean()
     delta = (grag_hop - rag_hop).rename("delta_faithfulness").round(4)
     print(delta)
     print("\n(positive = GraphRAG more faithful than RAG on this type)")
 
     # ── 4. Critical cases: very low faithfulness (<0.3) ──
-    print_section("CRITICAL CASES (faithfulness < 0.3)")
-    for name, df in [("RAG", rag_df), ("GraphRAG", grag_df)]:
+    print_section("CRITICAL CASES (faithfulness < 0.3, coverage errors excluded)")
+    for name, df in [("RAG", rag_ans), ("GraphRAG", grag_ans)]:
         bad = df[df["faithfulness"] < 0.3]
         print(f"\n{name}: {len(bad)}/{len(df)} critical entries")
         if len(bad):
@@ -145,7 +179,7 @@ def analyze(model: SentenceTransformer):
         s = str(text).strip()
         return bool(s and re.search(r'\d', s) and _NUM_PAT.match(s))
 
-    for name, df in [("RAG", rag_df), ("GraphRAG", grag_df)]:
+    for name, df in [("RAG", rag_ans), ("GraphRAG", grag_ans)]:
         df["gt_is_numeric"] = df["ground_truth"].apply(is_numeric_answer)
         num = df[df["gt_is_numeric"]]
         txt = df[~df["gt_is_numeric"]]
@@ -153,23 +187,23 @@ def analyze(model: SentenceTransformer):
         print(f"{name} — Text    gt ({len(txt)} entries): faithfulness={txt['faithfulness'].mean():.4f}")
 
     # ── 7. Faithfulness distribution (for the report) ──────
-    print_section("FAITHFULNESS DISTRIBUTION")
+    print_section("FAITHFULNESS DISTRIBUTION (coverage errors excluded)")
     for threshold in [0.3, 0.5, 0.7, 0.9]:
-        rag_pct  = (rag_df["faithfulness"]  >= threshold).mean()
-        grag_pct = (grag_df["faithfulness"] >= threshold).mean()
+        rag_pct  = (rag_ans["faithfulness"]  >= threshold).mean()
+        grag_pct = (grag_ans["faithfulness"] >= threshold).mean()
         print(f"faithfulness >= {threshold}: RAG={rag_pct:.1%}  GraphRAG={grag_pct:.1%}")
 
     # ── 8. Sentence-BERT Cosine Similarity ───────────────────
-    print_section("SENTENCE-BERT COSINE SIMILARITY  (gen ↔ ground_truth)")
+    print_section("SENTENCE-BERT COSINE SIMILARITY  (gen ↔ ground_truth, coverage errors excluded)")
     sbert_summary = pd.DataFrame({
-        "mean_sbert": [rag_df["sbert_cosine"].mean(),        grag_df["sbert_cosine"].mean()],
-        "std_sbert":  [rag_df["sbert_cosine"].std(),         grag_df["sbert_cosine"].std()],
-        "n_valid":    [rag_df["sbert_cosine"].notna().sum(),  grag_df["sbert_cosine"].notna().sum()],
+        "mean_sbert": [rag_ans["sbert_cosine"].mean(),        grag_ans["sbert_cosine"].mean()],
+        "std_sbert":  [rag_ans["sbert_cosine"].std(),         grag_ans["sbert_cosine"].std()],
+        "n_valid":    [rag_ans["sbert_cosine"].notna().sum(),  grag_ans["sbert_cosine"].notna().sum()],
     }, index=["RAG", "GraphRAG"])
     print(sbert_summary.round(4))
 
     print_section("SENTENCE-BERT — BY HOP_TYPE")
-    for name, df in [("RAG", rag_df), ("GraphRAG", grag_df)]:
+    for name, df in [("RAG", rag_ans), ("GraphRAG", grag_ans)]:
         print(f"\n{name}:")
         g = df.groupby("hop_type")["sbert_cosine"].agg(
             mean_sbert="mean",
@@ -184,7 +218,7 @@ def analyze(model: SentenceTransformer):
     # With the pre-fix interpretation (score = P(halluc) misread as P(faithful))
     # this correlation was about −0.33.
     print_section("SANITY CHECK — Pearson(faithfulness, sbert_cosine)")
-    for name, df in [("RAG", rag_df), ("GraphRAG", grag_df)]:
+    for name, df in [("RAG", rag_ans), ("GraphRAG", grag_ans)]:
         sub = df.dropna(subset=["sbert_cosine"])
         r = sub["faithfulness"].corr(sub["sbert_cosine"])
         print(f"  {name:8s}  r = {r:+.4f}   (n={len(sub)})")
@@ -199,6 +233,14 @@ def compare_hybrid(model: SentenceTransformer):
 
     baseline = add_sbert_cosine(baseline, model)
     hybrid   = add_sbert_cosine(hybrid,   model)
+
+    print(f"\nCoverage errors (excluded): baseline={baseline['is_coverage_error'].sum()}/{len(baseline)} "
+          f"({baseline['is_coverage_error'].mean():.1%})  "
+          f"hybrid={hybrid['is_coverage_error'].sum()}/{len(hybrid)} "
+          f"({hybrid['is_coverage_error'].mean():.1%})")
+
+    baseline, _ = split_coverage(baseline)
+    hybrid,   _ = split_coverage(hybrid)
 
     print(f"\nBaseline RAG : faithfulness={baseline['faithfulness'].mean():.4f}  halluc={(baseline['faithfulness'] < 0.5).mean():.1%}")
     print(f"Hybrid  RAG  : faithfulness={hybrid['faithfulness'].mean():.4f}  halluc={(hybrid['faithfulness']  < 0.5).mean():.1%}")
