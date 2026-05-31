@@ -193,3 +193,10 @@ if __name__ == "__main__":
         t5_index=t5_index,
         llm_index=llm_index,
     )
+    convert_to_mirage(
+        results_path="task2_setup_rag/output/graph_chunk_results.jsonl",
+        output_path="task3_evaluation/inputs/graph_chunk_input.csv",
+        pipeline_name="graph_chunk",
+        t5_index=t5_index,
+        llm_index=llm_index,
+    )

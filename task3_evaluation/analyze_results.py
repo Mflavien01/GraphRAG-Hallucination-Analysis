@@ -310,9 +310,60 @@ def compare_hybrid(model: SentenceTransformer):
         print(f"  {hop:12s}  baseline={b:.4f}  hybrid={h:.4f}  Δ={h-b:+.4f}")
         
         
+def compare_graph_chunk(model: SentenceTransformer):
+    """Compare all pipelines vs the Graph-Chunk hybrid (KG statements + text chunks)."""
+    print_section("GRAPH-CHUNK HYBRID vs BASELINES")
+
+    rag_df   = load_scores("task3_evaluation/outputs/factcc_rag")
+    grag_df  = load_scores("task3_evaluation/outputs/factcc_graphrag")
+    gc_df    = load_scores("task3_evaluation/outputs/factcc_graph_chunk")
+
+    rag_df  = add_sbert_cosine(rag_df,  model)
+    grag_df = add_sbert_cosine(grag_df, model)
+    gc_df   = add_sbert_cosine(gc_df,   model)
+
+    for name, df in [("RAG", rag_df), ("GraphRAG", grag_df), ("Graph-Chunk", gc_df)]:
+        print(f"\n{name}: coverage_errors={df['is_coverage_error'].sum()}/{len(df)} "
+              f"({df['is_coverage_error'].mean():.1%})")
+
+    rag_ans, _  = split_coverage(rag_df)
+    grag_ans, _ = split_coverage(grag_df)
+    gc_ans, _   = split_coverage(gc_df)
+
+    print("\n--- Global faithfulness (coverage errors excluded) ---")
+    for name, df in [("RAG", rag_ans), ("GraphRAG", grag_ans), ("Graph-Chunk", gc_ans)]:
+        print(f"  {name:<16}  faithfulness={df['faithfulness'].mean():.4f}  "
+              f"halluc={(df['faithfulness'] < 0.5).mean():.1%}")
+    print(f"  {'Δ Graph-Chunk − RAG':<16}  "
+          f"{gc_ans['faithfulness'].mean() - rag_ans['faithfulness'].mean():+.4f}")
+    print(f"  {'Δ Graph-Chunk − GraphRAG':<16}  "
+          f"{gc_ans['faithfulness'].mean() - grag_ans['faithfulness'].mean():+.4f}")
+
+    print("\n--- Par hop_type (faithfulness) ---")
+    for hop in ['t5', 'single_hop', 'multi_hop']:
+        r = rag_ans[rag_ans['hop_type'] == hop]['faithfulness'].mean()
+        g = grag_ans[grag_ans['hop_type'] == hop]['faithfulness'].mean()
+        c = gc_ans[gc_ans['hop_type'] == hop]['faithfulness'].mean()
+        print(f"  {hop:12s}  rag={r:.4f}  graphrag={g:.4f}  graph-chunk={c:.4f}  "
+              f"Δ(gc−rag)={c-r:+.4f}  Δ(gc−grag)={c-g:+.4f}")
+
+    print_section("SENTENCE-BERT — GRAPH-CHUNK vs BASELINES")
+    for name, df in [("RAG", rag_ans), ("GraphRAG", grag_ans), ("Graph-Chunk", gc_ans)]:
+        print(f"  {name:<16}  sbert={df['sbert_cosine'].mean():.4f}  "
+              f"std={df['sbert_cosine'].std():.4f}")
+
+    print("\n--- Par hop_type (SBERT) ---")
+    for hop in ['t5', 'single_hop', 'multi_hop']:
+        r = rag_ans[rag_ans['hop_type'] == hop]['sbert_cosine'].mean()
+        g = grag_ans[grag_ans['hop_type'] == hop]['sbert_cosine'].mean()
+        c = gc_ans[gc_ans['hop_type'] == hop]['sbert_cosine'].mean()
+        print(f"  {hop:12s}  rag={r:.4f}  graphrag={g:.4f}  graph-chunk={c:.4f}")
+
+
 if __name__ == "__main__":
     print("Loading SBERT model (all-MiniLM-L6-v2) …")
     _sbert = SentenceTransformer("all-MiniLM-L6-v2")
     analyze(_sbert)
     compare_hybrid(_sbert)
     compare_graphrag_hybrid(_sbert)
+    compare_graph_chunk(_sbert)

@@ -1,6 +1,7 @@
 """
   python task3_evaluation/run_mirage.py --pipeline rag
   python task3_evaluation/run_mirage.py --pipeline graphrag
+  python task3_evaluation/run_mirage.py --pipeline graph-chunk
   python task3_evaluation/run_mirage.py --pipeline both
 """
 
@@ -53,7 +54,7 @@ def run(input_path: str, output_dir: str):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--pipeline",
-                        choices=["rag", "graphrag", "hybrid", "graphrag-hybrid", "both"],
+                        choices=["rag", "graphrag", "hybrid", "graphrag-hybrid", "graph-chunk", "both"],
                         default="both")
     args = parser.parse_args()
 
@@ -76,4 +77,9 @@ if __name__ == "__main__":
         run(
             input_path="task3_evaluation/inputs/graphrag_hybrid_input.csv",
             output_dir="task3_evaluation/outputs/factcc_graphrag_hybrid"
+        )
+    if args.pipeline in ("graph-chunk", "both"):
+        run(
+            input_path="task3_evaluation/inputs/graph_chunk_input.csv",
+            output_dir="task3_evaluation/outputs/factcc_graph_chunk"
         )

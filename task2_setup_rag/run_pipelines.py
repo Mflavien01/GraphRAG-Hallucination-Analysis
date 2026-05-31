@@ -253,11 +253,34 @@ def run_graphrag_hybrid_pipeline(llm, limit=None):
         "GraphRAG-Hybrid"
     )
 
+
+def run_graph_chunk_pipeline(llm, limit=None):
+    from graph_rag.pipeline_graph_chunk import run_graph_chunk
+
+    questions = load_all_questions()
+    print(f"Loaded {len(questions)} questions (T5 + LLM, both datasets)")
+
+    if limit:
+        questions = questions[:limit]
+        print(f"  → truncated to {len(questions)} for this run")
+
+    if not questions:
+        print("No questions found — skipping Graph-Chunk Hybrid.")
+        return
+
+    run_and_save(
+        questions,
+        run_graph_chunk,
+        llm,
+        OUTPUT_DIR / "graph_chunk_results.jsonl",
+        "Graph-Chunk"
+    )
+
 # ── main ────────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run RAG and/or GraphRAG over the task 1 questions.")
     parser.add_argument("pipeline", nargs="?",
-                        choices=["rag", "graphrag", "hybrid", "graphrag-hybrid", "all"],
+                        choices=["rag", "graphrag", "hybrid", "graphrag-hybrid", "graph-chunk", "all"],
                         default="all",
                         help="which pipeline to run (default: all)")
     parser.add_argument("--limit", type=int, default=None,
@@ -282,3 +305,6 @@ if __name__ == "__main__":
 
     if args.pipeline in ("graphrag-hybrid", "all"):
         run_graphrag_hybrid_pipeline(llm, limit=args.limit)
+
+    if args.pipeline in ("graph-chunk", "all"):
+        run_graph_chunk_pipeline(llm, limit=args.limit)
