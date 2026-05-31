@@ -230,10 +230,35 @@ def run_rag_hybrid_pipeline(llm, limit=None):
         "RAG-Hybrid"
     )
 
+
+def run_graphrag_hybrid_pipeline(llm, limit=None):
+    from graph_rag.pipeline_hybrid import run_graphrag_hybrid
+
+    questions = load_all_questions()
+    print(f"Loaded {len(questions)} questions (T5 + LLM, both datasets)")
+
+    if limit:
+        questions = questions[:limit]
+        print(f"  → truncated to {len(questions)} for this run")
+
+    if not questions:
+        print("No questions found — skipping GraphRAG Hybrid.")
+        return
+
+    run_and_save(
+        questions,
+        run_graphrag_hybrid,
+        llm,
+        OUTPUT_DIR / "graphrag_hybrid_results.jsonl",
+        "GraphRAG-Hybrid"
+    )
+
 # ── main ────────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run RAG and/or GraphRAG over the task 1 questions.")
-    parser.add_argument("pipeline", nargs="?", choices=["rag", "graphrag", "hybrid", "all"], default="all",
+    parser.add_argument("pipeline", nargs="?",
+                        choices=["rag", "graphrag", "hybrid", "graphrag-hybrid", "all"],
+                        default="all",
                         help="which pipeline to run (default: all)")
     parser.add_argument("--limit", type=int, default=None,
                         help="cap the number of questions per pipeline (useful for smoke tests)")
@@ -251,6 +276,9 @@ if __name__ == "__main__":
 
     if args.pipeline in ("graphrag", "all"):
         run_graphrag_pipeline(llm, limit=args.limit)
-    
+
     if args.pipeline in ("hybrid", "all"):
         run_rag_hybrid_pipeline(llm, limit=args.limit)
+
+    if args.pipeline in ("graphrag-hybrid", "all"):
+        run_graphrag_hybrid_pipeline(llm, limit=args.limit)

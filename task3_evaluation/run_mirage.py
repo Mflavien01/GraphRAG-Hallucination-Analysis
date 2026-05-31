@@ -52,7 +52,9 @@ def run(input_path: str, output_dir: str):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--pipeline", choices=["rag", "graphrag", "hybrid", "both"], default="both")
+    parser.add_argument("--pipeline",
+                        choices=["rag", "graphrag", "hybrid", "graphrag-hybrid", "both"],
+                        default="both")
     args = parser.parse_args()
 
     if args.pipeline in ("rag", "both"):
@@ -69,4 +71,9 @@ if __name__ == "__main__":
         run(
             input_path="task3_evaluation/inputs/rag_hybrid_input.csv",
             output_dir="task3_evaluation/outputs/factcc_rag_hybrid"
+        )
+    if args.pipeline in ("graphrag-hybrid", "both"):
+        run(
+            input_path="task3_evaluation/inputs/graphrag_hybrid_input.csv",
+            output_dir="task3_evaluation/outputs/factcc_graphrag_hybrid"
         )
