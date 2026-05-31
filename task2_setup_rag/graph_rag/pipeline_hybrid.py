@@ -28,9 +28,9 @@ _triples = load_all_triples()
 _faiss_index, _bm25_index, _statements, _model = build_statement_index_hybrid(_triples)
 
 
-def run_graphrag_hybrid(question, llm: BaseLLM):
+def run_graphrag_hybrid(question, llm: BaseLLM, k: int = 10):
     context = retrieve_statements_hybrid(
-        question, _faiss_index, _bm25_index, _statements, _model, k=10
+        question, _faiss_index, _bm25_index, _statements, _model, k=k
     )
     context_text = "\n".join(context)
 
