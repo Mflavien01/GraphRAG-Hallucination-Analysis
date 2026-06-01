@@ -1,0 +1,78 @@
+{
+  "builder_name": "csv",
+  "citation": "",
+  "config_name": "default",
+  "dataset_name": "csv",
+  "dataset_size": 20984,
+  "description": "",
+  "download_size": 19103,
+  "features": {
+    "source": {
+      "dtype": "large_string",
+      "_type": "Value"
+    },
+    "gen": {
+      "dtype": "large_string",
+      "_type": "Value"
+    },
+    "id": {
+      "dtype": "large_string",
+      "_type": "Value"
+    },
+    "question": {
+      "dtype": "large_string",
+      "_type": "Value"
+    },
+    "ground_truth": {
+      "dtype": "large_string",
+      "_type": "Value"
+    },
+    "hop_type": {
+      "dtype": "large_string",
+      "_type": "Value"
+    },
+    "pipeline": {
+      "dtype": "large_string",
+      "_type": "Value"
+    },
+    "is_coverage_error": {
+      "dtype": "bool",
+      "_type": "Value"
+    },
+    "predictions": {
+      "HALL": {
+        "dtype": "float64",
+        "_type": "Value"
+      },
+      "NOHALL": {
+        "dtype": "float64",
+        "_type": "Value"
+      }
+    },
+    "score": {
+      "dtype": "float64",
+      "_type": "Value"
+    },
+    "faithfulness": {
+      "dtype": "float64",
+      "_type": "Value"
+    }
+  },
+  "homepage": "",
+  "license": "",
+  "size_in_bytes": 40087,
+  "splits": {
+    "train": {
+      "name": "train",
+      "num_bytes": 20984,
+      "num_examples": 50,
+      "dataset_name": "csv"
+    }
+  },
+  "version": {
+    "version_str": "0.0.0",
+    "major": 0,
+    "minor": 0,
+    "patch": 0
+  }
+}
