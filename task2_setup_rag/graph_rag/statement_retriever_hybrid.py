@@ -1,19 +1,22 @@
 """
-GraphRAG statement retriever — version hybride FAISS (cosine) + BM25 (RRF)
+GraphRAG statement retriever — version hybride FAISS (cosine) + BM25 + cross-encoder
 
 Même principe que rag/vector_store.py search_hybrid(), appliqué aux statements KG
 au lieu des chunks texte.
 
 Différence vs statement_retriever.py :
 - build_statement_index_hybrid() construit deux index : FAISS + BM25
-- retrieve_statements_hybrid() fusionne les deux rankings via RRF
+- retrieve_statements_hybrid() constitue un pool FAISS∪BM25 puis rerank cross-encoder
 """
 
-from sentence_transformers import SentenceTransformer
+from sentence_transformers import SentenceTransformer, CrossEncoder
 import numpy as np
 import faiss
 import re
 from rank_bm25 import BM25Okapi
+
+# Cross-encoder loaded once at module level (shared across all calls)
+_cross_encoder = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
 
 
 def build_statement_index_hybrid(triples, model_name="all-MiniLM-L6-v2"):
@@ -42,30 +45,33 @@ def build_statement_index_hybrid(triples, model_name="all-MiniLM-L6-v2"):
 
 
 def retrieve_statements_hybrid(question, faiss_index, bm25_index, statements, model, k=10):
-    """Hybrid retrieval over KG statements: FAISS cosine + BM25 via RRF.
+    """Hybrid retrieval over KG statements: FAISS cosine + BM25 pool → cross-encoder rerank.
 
-    RRF score for statement i = 1/(rank_faiss(i) + 60) + 1/(rank_bm25(i) + 60)
-    Constant 60 follows Cormack et al. (2009).
+    Stage 1 — recall : union des top k*6 candidats FAISS et top k*6 BM25.
+    Stage 2 — rerank : cross-encoder score chaque paire (question, statement)
+               et retourne les k meilleurs.
     """
-    # FAISS: retrieve top k*3 candidates for overlap with BM25
+    candidate_k = k * 6
+
+    # FAISS: top candidate_k semantic candidates
     query_emb = model.encode([question], normalize_embeddings=True)
     query_emb = np.array(query_emb).astype("float32")
-    _, faiss_indices = faiss_index.search(query_emb, k * 3)
-    faiss_ranks = {int(idx): rank for rank, idx in enumerate(faiss_indices[0])}
+    _, faiss_indices = faiss_index.search(query_emb, candidate_k)
+    faiss_set = {int(idx) for idx in faiss_indices[0] if idx >= 0}
 
-    # BM25: score all statements, then rank by descending score
+    # BM25: top candidate_k lexical candidates
     query_tokens = re.findall(r'\w+', question.lower())
     bm25_scores = bm25_index.get_scores(query_tokens)
-    bm25_ranked = sorted(range(len(bm25_scores)), key=lambda i: bm25_scores[i], reverse=True)
-    bm25_ranks = {idx: rank for rank, idx in enumerate(bm25_ranked)}
+    bm25_top = sorted(range(len(bm25_scores)), key=lambda i: bm25_scores[i], reverse=True)[:candidate_k]
+    bm25_set = set(bm25_top)
 
-    # RRF: consider all statements (present in at least one ranking)
-    candidate_indices = set(faiss_ranks.keys()) | set(range(len(statements)))
-    rrf_scores = {}
-    for idx in candidate_indices:
-        rank_f = faiss_ranks.get(idx, k * 3 + 60)   # penalty if absent from FAISS top
-        rank_b = bm25_ranks.get(idx, len(statements)) # penalty if absent from BM25
-        rrf_scores[idx] = 1 / (rank_f + 60) + 1 / (rank_b + 60)
+    # Pool: union of both sets
+    candidate_indices = list(faiss_set | bm25_set)
 
-    top_k = sorted(rrf_scores, key=lambda i: rrf_scores[i], reverse=True)[:k]
-    return [statements[i] for i in top_k]
+    # Cross-encoder reranking
+    candidate_texts = [statements[idx] for idx in candidate_indices]
+    pairs = [(question, text) for text in candidate_texts]
+    ce_scores = _cross_encoder.predict(pairs)
+
+    ranked = sorted(zip(candidate_indices, ce_scores), key=lambda x: x[1], reverse=True)[:k]
+    return [statements[idx] for idx, _ in ranked]

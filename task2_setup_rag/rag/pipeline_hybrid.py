@@ -1,12 +1,12 @@
 """
-RAG Pipeline — version hybride BM25 + FAISS (RRF)
+RAG Pipeline — version hybride BM25 + FAISS + cross-encoder reranking
 
-Objectif : réduire les 138 cas de parametric memory leakage
+Objectif : réduire les cas de parametric memory leakage
 où l'embedding cosine rate des chunks avec des noms propres précis.
 
 Différence vs pipeline.py :
 - build_bm25_index() en plus au démarrage
-- search_hybrid() à la place de search()
+- search_hybrid() à la place de search() (FAISS∪BM25 pool → cross-encoder rerank)
 - Tout le reste est identique
 """
 

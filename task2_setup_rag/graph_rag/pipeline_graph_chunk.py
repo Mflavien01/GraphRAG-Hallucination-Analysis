@@ -2,15 +2,15 @@
 Graph-Chunk Hybrid Pipeline
 
 Combines two complementary retrieval sources:
-  - KG statements  : FAISS (cosine) + BM25 via RRF on knowledge-graph triples
-  - Text chunks    : FAISS (cosine) + BM25 via RRF on raw corpus text
+  - KG statements  : FAISS (cosine) + BM25 pool → cross-encoder rerank on KG triples
+  - Text chunks    : FAISS (cosine) + BM25 pool → cross-encoder rerank on raw corpus text
 
 Each source contributes k_graph=5 and k_chunk=5 items. The context is
 presented with explicit [KG] / [CHUNK] labels so the LLM can distinguish
 structured facts from narrative evidence. Total context window: 10 items.
 
 Design rationale: the two sources are complementary (structured facts vs
-prose), so fixed-budget allocation is preferred over cross-source RRF — we
+prose), so fixed-budget allocation is preferred over cross-source fusion — we
 want both types of evidence, not one dominating the other.
 """
 

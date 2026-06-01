@@ -1,12 +1,12 @@
 """
-GraphRAG Pipeline — version hybride FAISS (cosine) + BM25 (RRF)
+GraphRAG Pipeline — version hybride FAISS (cosine) + BM25 + cross-encoder reranking
 
 Reprend la méthode de rag/pipeline_hybrid.py appliquée aux statements du KG
 plutôt qu'aux chunks texte.
 
 Différence vs pipeline.py :
 - build_statement_index_hybrid() en plus au démarrage (construit deux index)
-- retrieve_statements_hybrid() à la place de retrieve_statements()
+- retrieve_statements_hybrid() à la place de retrieve_statements() (FAISS∪BM25 pool → cross-encoder rerank)
 - Tout le reste est identique (même prompt, même format de sortie)
 """
 

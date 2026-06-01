@@ -1,8 +1,11 @@
 import faiss
 import numpy as np
-from sentence_transformers import SentenceTransformer
+from sentence_transformers import SentenceTransformer, CrossEncoder
 from rank_bm25 import BM25Okapi
 import re
+
+# Cross-encoder loaded once at module level (shared across all calls)
+_cross_encoder = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
 
 
 def build_bm25_index(chunks):
@@ -13,61 +16,52 @@ def build_bm25_index(chunks):
     """
     tokenized_corpus = []
     for chunk in chunks:
-        # Tokenisation simple : minuscules + split sur non-alphanumérique
         tokens = re.findall(r'\w+', chunk["text"].lower())
         tokenized_corpus.append(tokens)
-    
+
     return BM25Okapi(tokenized_corpus)
 
 def search_hybrid(query, faiss_index, bm25_index, chunks, model, k=5):
     """
-    Retrieval hybride : combine FAISS (sémantique) + BM25 (lexical)
-    via Reciprocal Rank Fusion (RRF).
+    Retrieval hybride : combine FAISS (sémantique) + BM25 (lexical) pour
+    constituer un pool de candidats, puis reranking par cross-encoder.
 
-    RRF score pour un chunk i = 1/(rank_faiss(i) + 60) + 1/(rank_bm25(i) + 60)
-    La constante 60 est standard dans la littérature (Cormack et al. 2009).
-    Un chunk bien classé dans les DEUX retrieval obtient le meilleur score.
+    Stage 1 — recall : union des top k*6 candidats FAISS et top k*6 BM25.
+    Stage 2 — rerank : cross-encoder score chaque paire (query, chunk)
+               et retourne les k meilleurs.
     """
-    # ── FAISS : récupère top k*3 pour avoir assez d'overlap avec BM25 ──
+    candidate_k = k * 6
+
+    # ── FAISS : top candidate_k candidats sémantiques ──────────────────
     query_vector = model.encode(query).reshape(1, -1)
-    distances, faiss_indices = faiss_index.search(query_vector, k * 3)
+    distances, faiss_indices = faiss_index.search(query_vector, candidate_k)
+    faiss_set = {int(idx) for idx in faiss_indices[0] if idx >= 0}
 
-    # Construit un dict {idx_chunk: rank_faiss} (rank commence à 0)
-    faiss_ranks = {}
-    for rank, idx in enumerate(faiss_indices[0]):
-        faiss_ranks[idx] = rank
-
-    # ── BM25 : score tous les chunks, puis classe par score décroissant ──
+    # ── BM25 : top candidate_k candidats lexicaux ───────────────────────
     query_tokens = re.findall(r'\w+', query.lower())
-    bm25_scores = bm25_index.get_scores(query_tokens)  # score pour chaque chunk
+    bm25_scores = bm25_index.get_scores(query_tokens)
+    bm25_top = sorted(range(len(bm25_scores)), key=lambda i: bm25_scores[i], reverse=True)[:candidate_k]
+    bm25_set = set(bm25_top)
 
-    # Classe les indices par score BM25 décroissant → donne le rank BM25
-    bm25_ranked = sorted(range(len(bm25_scores)),
-                         key=lambda i: bm25_scores[i], reverse=True)
-    bm25_ranks = {idx: rank for rank, idx in enumerate(bm25_ranked)}
+    # ── Pool : union des deux ensembles ─────────────────────────────────
+    candidate_indices = list(faiss_set | bm25_set)
 
-    # ── RRF : fusionne les deux rankings ─────────────────────────────────
-    # On ne considère que les chunks présents dans au moins un des deux
-    candidate_indices = set(faiss_ranks.keys()) | set(range(len(chunks)))
+    # ── Cross-encoder reranking ──────────────────────────────────────────
+    candidate_texts = [chunks[idx]["text"] for idx in candidate_indices]
+    pairs = [(query, text) for text in candidate_texts]
+    ce_scores = _cross_encoder.predict(pairs)
 
-    rrf_scores = {}
-    for idx in candidate_indices:
-        rank_f = faiss_ranks.get(idx, k * 3 + 60)  # pénalité si absent du FAISS
-        rank_b = bm25_ranks.get(idx, len(chunks))   # pénalité si absent du BM25
-        rrf_scores[idx] = 1 / (rank_f + 60) + 1 / (rank_b + 60)
+    ranked = sorted(zip(candidate_indices, ce_scores), key=lambda x: x[1], reverse=True)[:k]
 
-    # Top-k par score RRF décroissant
-    top_k_indices = sorted(rrf_scores, key=lambda i: rrf_scores[i], reverse=True)[:k]
-
-    # ── Retourne le même format que search() ─────────────────────────────
+    # ── Retourne le même format que search() ────────────────────────────
     results = []
-    for idx in top_k_indices:
+    for idx, score in ranked:
         results.append({
             "id":       chunks[idx]["id"],
             "category": chunks[idx]["category"],
             "dataset":  chunks[idx]["dataset"],
             "text":     chunks[idx]["text"],
-            "distance": float(rrf_scores[idx])  # ici c'est le score RRF, pas L2
+            "distance": float(score)  # cross-encoder score (higher = more relevant)
         })
     return results
 
