@@ -36,7 +36,7 @@ _faiss_index = build_index(_embedded_chunks)      # index sémantique (existant)
 _bm25_index  = build_bm25_index(_embedded_chunks) # index lexical (nouveau)
 
 
-def run_rag_hybrid(question, llm: BaseLLM, k: int = 5):
+def run_rag_hybrid(question, llm: BaseLLM, k: int = 4):
     # Retrieval hybride BM25 + FAISS
     results = search_hybrid(
         question, _faiss_index, _bm25_index, _embedded_chunks, _model, k=k

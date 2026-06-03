@@ -28,7 +28,7 @@ _triples = load_all_triples()
 _faiss_index, _bm25_index, _statements, _model = build_statement_index_hybrid(_triples)
 
 
-def run_graphrag_hybrid(question, llm: BaseLLM, k: int = 10):
+def run_graphrag_hybrid(question, llm: BaseLLM, k: int = 13):
     context = retrieve_statements_hybrid(
         question, _faiss_index, _bm25_index, _statements, _model, k=k
     )

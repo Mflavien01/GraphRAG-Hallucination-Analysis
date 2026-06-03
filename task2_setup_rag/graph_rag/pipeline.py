@@ -18,7 +18,7 @@ _index, _statements, _model = build_statement_index(_triples)
 
 
 
-def run_graphrag(question, llm: BaseLLM, k: int = 10):
+def run_graphrag(question, llm: BaseLLM, k: int = 12):
     context = retrieve_statements(question, _index, _statements, _model, k=k)
     context_text = "\n".join(context)
 

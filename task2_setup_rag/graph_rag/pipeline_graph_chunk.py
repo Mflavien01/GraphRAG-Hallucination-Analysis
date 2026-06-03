@@ -47,7 +47,7 @@ _faiss_chunks = build_index(_embedded_chunks)
 _bm25_chunks  = build_bm25_index(_embedded_chunks)
 
 
-def run_graph_chunk(question: str, llm: BaseLLM, k_graph: int = 5, k_chunk: int = 5):
+def run_graph_chunk(question: str, llm: BaseLLM, k_graph: int = 20, k_chunk: int = 20):
     # KG statements via GraphRAG hybrid retriever
     kg_items = retrieve_statements_hybrid(
         question, _faiss_stmt, _bm25_stmt, _statements, _stmt_model, k=k_graph

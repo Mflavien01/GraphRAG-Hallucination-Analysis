@@ -21,7 +21,7 @@ _embedded_chunks = embed_chunks(_chunks, model_name="all-MiniLM-L6-v2")
 _index = build_index(_embedded_chunks)
 
 
-def run_rag(question, llm: BaseLLM, k: int = 5):
+def run_rag(question, llm: BaseLLM, k: int = 4):
     results=search(question, _index, _embedded_chunks, _model, k=k) # search for the most relevant chunks in the index
     context_texts = "\n\n".join([result["text"] for result in results]) # concatenate the retrieved texts to provide as context to the LLM
     prompt = f"""Given the following retrieved context:
