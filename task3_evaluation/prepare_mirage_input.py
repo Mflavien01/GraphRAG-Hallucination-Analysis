@@ -200,3 +200,10 @@ if __name__ == "__main__":
         t5_index=t5_index,
         llm_index=llm_index,
     )
+    convert_to_mirage(
+        results_path="task2_setup_rag/output/rag_parent_child_results.jsonl",
+        output_path="task3_evaluation/inputs/rag_parent_child_input.csv",
+        pipeline_name="rag_parent_child",
+        t5_index=t5_index,
+        llm_index=llm_index,
+    )

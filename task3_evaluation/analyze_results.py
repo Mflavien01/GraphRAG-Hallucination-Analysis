@@ -360,6 +360,64 @@ def compare_graph_chunk(model: SentenceTransformer):
         print(f"  {hop:12s}  rag={r:.4f}  graphrag={g:.4f}  graph-chunk={c:.4f}")
 
 
+def compare_parent_child(model: SentenceTransformer):
+    """Compare RAG baseline vs RAG Parent-Child chunking."""
+    print_section("RAG BASELINE vs RAG PARENT-CHILD")
+
+    pc_path = Path("task3_evaluation/outputs/factcc_rag_parent_child")
+    if not pc_path.exists():
+        print("  [SKIP] factcc_rag_parent_child not found — run the parent-child pipeline first:")
+        print("    python task2_setup_rag/run_pipelines.py parent-child")
+        print("    python task3_evaluation/prepare_mirage_input.py")
+        print("    python task3_evaluation/run_mirage.py")
+        return
+
+    baseline    = load_scores("task3_evaluation/outputs/factcc_rag")
+    parent_child = load_scores(str(pc_path))
+
+    baseline     = add_sbert_cosine(baseline,     model)
+    parent_child = add_sbert_cosine(parent_child, model)
+
+    print(f"\nCoverage errors (excluded): "
+          f"baseline={baseline['is_coverage_error'].sum()}/{len(baseline)} "
+          f"({baseline['is_coverage_error'].mean():.1%})  "
+          f"parent-child={parent_child['is_coverage_error'].sum()}/{len(parent_child)} "
+          f"({parent_child['is_coverage_error'].mean():.1%})")
+
+    baseline,     _ = split_coverage(baseline)
+    parent_child, _ = split_coverage(parent_child)
+
+    print(f"\nBaseline RAG      : faithfulness={baseline['faithfulness'].mean():.4f}  "
+          f"halluc={(baseline['faithfulness'] < 0.5).mean():.1%}")
+    print(f"Parent-Child RAG  : faithfulness={parent_child['faithfulness'].mean():.4f}  "
+          f"halluc={(parent_child['faithfulness'] < 0.5).mean():.1%}")
+    print(f"Delta             : {parent_child['faithfulness'].mean() - baseline['faithfulness'].mean():+.4f}")
+
+    print("\n--- Par hop_type (faithfulness) ---")
+    for hop in ['t5', 'single_hop', 'multi_hop']:
+        b = baseline[baseline['hop_type'] == hop]['faithfulness'].mean()
+        p = parent_child[parent_child['hop_type'] == hop]['faithfulness'].mean()
+        print(f"  {hop:12s}  baseline={b:.4f}  parent-child={p:.4f}  Δ={p-b:+.4f}")
+
+    print_section("SENTENCE-BERT — RAG BASELINE vs RAG PARENT-CHILD")
+    print(f"\nBaseline RAG      : sbert={baseline['sbert_cosine'].mean():.4f}  "
+          f"std={baseline['sbert_cosine'].std():.4f}")
+    print(f"Parent-Child RAG  : sbert={parent_child['sbert_cosine'].mean():.4f}  "
+          f"std={parent_child['sbert_cosine'].std():.4f}")
+    print(f"Delta             : {parent_child['sbert_cosine'].mean() - baseline['sbert_cosine'].mean():+.4f}")
+
+    print("\n--- Par hop_type (SBERT) ---")
+    for hop in ['t5', 'single_hop', 'multi_hop']:
+        b = baseline[baseline['hop_type'] == hop]['sbert_cosine'].mean()
+        p = parent_child[parent_child['hop_type'] == hop]['sbert_cosine'].mean()
+        print(f"  {hop:12s}  baseline={b:.4f}  parent-child={p:.4f}  Δ={p-b:+.4f}")
+
+    # Export CSV
+    out = Path("task3_evaluation/outputs/")
+    parent_child.to_csv(out / "factcc_rag_parent_child_scores.csv", index=False)
+    print(f"\nExported → {out / 'factcc_rag_parent_child_scores.csv'}")
+
+
 if __name__ == "__main__":
     print("Loading SBERT model (all-MiniLM-L6-v2) …")
     _sbert = SentenceTransformer("all-MiniLM-L6-v2")
@@ -367,3 +425,4 @@ if __name__ == "__main__":
     compare_hybrid(_sbert)
     compare_graphrag_hybrid(_sbert)
     compare_graph_chunk(_sbert)
+    compare_parent_child(_sbert)

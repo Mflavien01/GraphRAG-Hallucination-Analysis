@@ -54,7 +54,7 @@ def run(input_path: str, output_dir: str):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--pipeline",
-                        choices=["rag", "graphrag", "hybrid", "graphrag-hybrid", "graph-chunk", "both"],
+                        choices=["rag", "graphrag", "hybrid", "graphrag-hybrid", "graph-chunk", "parent-child", "both"],
                         default="both")
     args = parser.parse_args()
 
@@ -82,4 +82,9 @@ if __name__ == "__main__":
         run(
             input_path="task3_evaluation/inputs/graph_chunk_input.csv",
             output_dir="task3_evaluation/outputs/factcc_graph_chunk"
+        )
+    if args.pipeline in ("parent-child",):
+        run(
+            input_path="task3_evaluation/inputs/rag_parent_child_input.csv",
+            output_dir="task3_evaluation/outputs/factcc_rag_parent_child"
         )
