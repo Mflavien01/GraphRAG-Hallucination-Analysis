@@ -3,9 +3,9 @@
   "citation": "",
   "config_name": "default",
   "dataset_name": "csv",
-  "dataset_size": 220502,
+  "dataset_size": 23050,
   "description": "",
-  "download_size": 198790,
+  "download_size": 21157,
   "features": {
     "source": {
       "dtype": "large_string",
@@ -60,12 +60,12 @@
   },
   "homepage": "",
   "license": "",
-  "size_in_bytes": 419292,
+  "size_in_bytes": 44207,
   "splits": {
     "train": {
       "name": "train",
-      "num_bytes": 220502,
-      "num_examples": 547,
+      "num_bytes": 23050,
+      "num_examples": 50,
       "dataset_name": "csv"
     }
   },
