@@ -5,9 +5,9 @@ Combines two complementary retrieval sources:
   - KG statements  : FAISS (cosine) + BM25 pool → cross-encoder rerank on KG triples
   - Text chunks    : FAISS (cosine) + BM25 pool → cross-encoder rerank on raw corpus text
 
-Each source contributes k_graph=5 and k_chunk=5 items. The context is
+Each source contributes k_graph=20 and k_chunk=20 items. The context is
 presented with explicit [KG] / [CHUNK] labels so the LLM can distinguish
-structured facts from narrative evidence. Total context window: 10 items.
+structured facts from narrative evidence. Total context window: 40 items.
 
 Design rationale: the two sources are complementary (structured facts vs
 prose), so fixed-budget allocation is preferred over cross-source fusion — we

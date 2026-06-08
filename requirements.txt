@@ -15,7 +15,6 @@ langchain-text-splitters>=0.3.8
 sentence-transformers
 faiss-cpu
 rank_bm25
-rdflib
 networkx>=3.6.1
 pyvis
 rapidfuzz

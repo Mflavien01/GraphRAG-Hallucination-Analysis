@@ -1,234 +1,283 @@
-# GraphRAG Hallucination Analysis
+# Hallucination Analysis in RAG and GraphRAG Systems
 
-This repository contains the code and experiments for a comparative study of
-hallucinations in **classical RAG** (dense vector similarity over text chunks)
-versus **GraphRAG** (structural traversal over an ontology-constrained Knowledge
-Graph). The goal is not to eliminate hallucinations but to characterise *when*,
-*why*, and *how* they appear in each paradigm, using two complementary reference
-benchmarks.
+> *How does the retrieval mechanism — not the generator — shape **when**, **why**, and **how** a large language model hallucinates?*
 
-**Authors:** Flavien Mathieu, Raphael Partouche
+An empirical study comparing **classical RAG** (dense retrieval over text chunks)
+with **GraphRAG** (retrieval over ontology-typed Knowledge-Graph triples), holding
+the generator fixed and varying *only* the retrieval stage. Six reproducible
+pipelines are evaluated on **547 validated question–answer pairs** spanning
+single- and multi-hop reasoning over two ISWC 2025 benchmarks, scored with the
+**MIRAGE / FactCC** framework and a Sentence-BERT correctness cross-check.
+
+<p align="left">
+  <img alt="Python" src="https://img.shields.io/badge/python-3.10+-blue.svg">
+  <img alt="FAISS" src="https://img.shields.io/badge/retrieval-FAISS%20%2B%20BM25-teal.svg">
+  <img alt="Evaluation" src="https://img.shields.io/badge/eval-MIRAGE%20%2F%20FactCC-orange.svg">
+  <img alt="Status" src="https://img.shields.io/badge/status-complete-success.svg">
+</p>
+
+📄 **Full report:** [`raport.tex`](raport.tex) · **Authors:** Flavien Mathieu, Raphael Partouche (EURECOM)
 **Supervisors:** Raphael Troncy, Pasquale Lisena, Carmelle Meli Songuon, Thibault Ehrhart
 
+---
 
+## TL;DR — Key findings
 
-## Project overview
+- **Hybrid recall + cross-encoder reranking on the *text* pipeline (RAG+CE) is the single most effective intervention.** It is the most faithful pipeline and the best on answer correctness, improving over plain RAG on *every* axis.
+- **GraphRAG trails** through three distinct, separable failure modes: leaf-node abstention, multi-hop context gaps, and surface-form mismatch with the text-based scorer.
+- **A novel dual *Graph-Chunk* pipeline** — fusing reranked text chunks and KG triples through `[CHUNK]`/`[KG]`-labelled context — attains the **lowest abstention rate of all pipelines (10.4%)** and recovers most of GraphRAG's multi-hop deficit.
+- **Retrieval depth is paradigm-dependent:** text pipelines saturate at small `k≈4`, graph pipelines need `k≈12–20`.
+- **Methodology contribution:** we surface and correct a score-orientation inversion in the MIRAGE/FactCC interface (`faithfulness = 1 − score`), validated by the sign-flip of its Pearson correlation with SBERT (≈ −0.24 → ≈ +0.24).
 
-The project is structured in three sequential tasks:
+### Results at a glance
 
-1. **Task 1 — Question generation.** Enrich the two reference benchmarks with a
-   balanced set of single-hop and multi-step questions, half generated from the
-   source text (fine-tuned T5 model) and half from the Knowledge Graph
-   (strictly-prompted LLM).
-2. **Task 2 — Pipelines.** Implement a classical RAG pipeline, a hybrid RAG
-   pipeline (dense + BM25), and a GraphRAG pipeline, all sharing the same
-   generator LLM (Qwen3 served through the Eurecom gateway) on the same source
-   data.
-3. **Task 3 — Evaluation.** Run all pipelines on the Task 1 question set,
-   evaluate them quantitatively with the MIRAGE framework (FactCC faithfulness
-   + SBERT cosine sanity check), and categorise the hallucinations
-   qualitatively.
+FactCC faithfulness (answered entries only, coverage errors excluded), abstention
+rate, hallucination rate, and SBERT answer-correctness across all six pipelines on
+the full 547-question test set:
 
+| Pipeline | `k` | Answered | Coverage err. ↓ | Faithfulness ↑ | Halluc. ↓ | SBERT ↑ |
+|---|:--:|:--:|:--:|:--:|:--:|:--:|
+| RAG baseline      | 4      | 453/547 | 17.2% | 0.547 | 44.6% | 0.446 |
+| GraphRAG baseline | 12     | 364/547 | 33.5% | 0.502 | 49.2% | 0.410 |
+| **RAG + CE**      | 4      | 483/547 | 11.7% | **0.560** | **43.9%** | **0.464** |
+| GraphRAG + CE     | 13     | 397/547 | 27.4% | 0.499 | 49.4% | 0.437 |
+| Graph-Chunk + CE  | 20+20  | 490/547 | **10.4%** | 0.527 | 47.1% | 0.454 |
+| RAG Parent-Child  | 4      | 464/547 | 15.2% | 0.534 | 46.1% | 0.445 |
 
+*Best per column in **bold**. `k` is the retrieval depth frozen from the K-sweep;
+Graph-Chunk uses a fixed per-leg budget (20 chunks + 20 triples).*
+
+---
+
+## Research question & contributions
+
+The central question: *how do the retrieval mechanisms of RAG and GraphRAG
+influence the frequency, nature, and typology of hallucinations produced by an
+LLM?* The goal is **not to eliminate hallucinations** but to characterise them.
+
+This repository contributes:
+
+1. **A balanced 547-pair evaluation dataset** over two KG benchmarks
+   (Text2KGBench-LettrIA + OSKGC), built by proportional stratified sampling and
+   unfolded into T5-derived (200), single-hop (199), and multi-hop (148)
+   questions with dual text/graph provenance.
+2. **Six reproducible QA pipelines** sharing one generator (see below), isolating
+   retrieval as the only variable.
+3. **A novel dual Graph-Chunk pipeline** that lets the *generator* fuse text and
+   graph evidence at generation time rather than at the retrieval stage.
+4. **A combined hallucination evaluation** (MIRAGE/FactCC + SBERT) with a
+   four-category qualitative failure taxonomy.
+5. **An evaluation-methodology analysis**: the FactCC score-orientation fix, a
+   demonstration of FactCC's surface-form bias against ontology-derived answers,
+   and a systematic retrieval-depth (`k`) study.
+
+---
+
+## The six pipelines
+
+All pipelines share the **same generator** — `Qwen3-30B-A3B-Instruct-2507` (a
+30B/3B-active Mixture-of-Experts model) served through the EURECOM self-hosted
+LiteLLM gateway — and the **same source corpora**, so any difference in
+hallucination behaviour is attributable to retrieval alone.
+
+| Pipeline | Retriever | Reranker | Idea |
+|---|---|---|---|
+| **RAG** | FAISS `IndexFlatL2` over text chunks | — | Dense semantic retrieval baseline |
+| **GraphRAG** | FAISS `IndexFlatIP` over verbalised `A-[rel]->B` triples | — | Ontology-typed structured retrieval |
+| **RAG + CE** | FAISS ∪ BM25 (chunks) | Cross-Encoder | Hybrid recall, lexical + semantic, then rerank |
+| **GraphRAG + CE** | FAISS ∪ BM25 (triples) | Cross-Encoder | Same recall-and-rerank on the triple side |
+| **Graph-Chunk + CE** | *two independent* hybrid retrievers | Cross-Encoder | Concatenate `[CHUNK]` + `[KG]` context; LLM fuses |
+| **RAG Parent-Child** | FAISS over child chunks → parent context | — | Retrieve fine, generate on wide context (ablation) |
+
+The cross-encoder (`cross-encoder/ms-marco-MiniLM-L-6-v2`) **superseded an earlier
+Reciprocal Rank Fusion (RRF) variant**, which is reported in the paper as a
+measured intermediate iteration. The bi-encoder/embedding model throughout is
+`all-MiniLM-L6-v2`.
+
+---
 
 ## Repository structure
 
 ```
 .
-├── data/                          # Datasets (gitignored, see below)
+├── raport.tex                     # Full research report (LaTeX)
+├── data/                          # Datasets (gitignored — see Setup)
 ├── stats/                         # Category-level dataset distributions
-├── task1_questions_generation/    # Task 1: T5 + LLM question generation
-├── task2_setup_rag/               # Task 2: RAG, hybrid RAG, GraphRAG pipelines
-├── task3_evaluation/              # Task 3: MIRAGE / FactCC evaluation
+│   ├── stats_Text2KG.py
+│   └── stats_OSKGC.py
+├── task1_questions_generation/    # Task 1 — T5 (text) + LLM (graph) question generation
+│   └── output/                    #   questions_{t5,llm}_{lettria,oskgc}.jsonl
+├── task2_setup_rag/               # Task 2 — the six retrieval pipelines
+│   ├── rag/                       #   chunking, embedding, FAISS, hybrid + parent-child
+│   ├── graph_rag/                 #   statement retriever, hybrid, graph-chunk
+│   ├── llm/                       #   EurecomLLM gateway wrapper
+│   ├── run_pipelines.py           #   orchestrator (checkpoint/resume + retry)
+│   ├── run_k_sweep.py             #   retrieval-depth sweep
+│   └── output/                    #   *_results.jsonl (547 rows each)
+├── task3_evaluation/              # Task 3 — MIRAGE / FactCC evaluation
+│   ├── prepare_mirage_input.py    #   build MIRAGE-ready CSVs (+ abstention detector)
+│   ├── run_mirage.py              #   run FactCC per pipeline
+│   ├── analyze_results.py         #   global / per-hop / SBERT analysis + CSV export
+│   ├── diagnostic_{factcc,sbert}.py
+│   ├── mirage_lib/                #   vendored MIRAGE library
+│   ├── inputs/  outputs/          #   CSVs + HuggingFace Arrow score datasets
+│   └── k_sweep_eval.py
 ├── requirements.txt
 └── .env                           # Local paths and API keys (not committed)
 ```
 
+---
+
 ## Setup
 
-### 1. Clone the repository
+### 1. Clone & install
 
 ```bash
 git clone https://github.com/Mflavien01/GraphRAG-Hallucination-Analysis.git
 cd GraphRAG-Hallucination-Analysis
-```
-
-### 2. Install the Python dependencies
-
-```bash
+python -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-The main dependencies are:
+Main dependencies: `transformers`, `torch`, `sentence-transformers`, `faiss-cpu`,
+`rank-bm25`, `datasets` (HuggingFace, used by MIRAGE), `openai` (Task 1 graph QG),
+`rdflib`, `networkx`, `rapidfuzz`, `json-repair`, `pandas`, `numpy`,
+`python-dotenv`, `langchain-*`.
 
-- `transformers`, `torch`, `sentencepiece`
-- `sentence-transformers`, `faiss-cpu`
-- `openai` (Task 1 graph-based QG with GPT-4o)
-- `rdflib`, `networkx` (GraphRAG)
-- `langchain-*` (chunking + experimental graph builders)
-- `rapidfuzz`, `json-repair`
-- `pandas`, `numpy`, `python-dotenv`
-- `datasets` (HuggingFace, used by MIRAGE)
+### 2. Download the datasets
 
-### 3. Download the datasets
+The `data/` folder is gitignored; both datasets are downloaded manually.
 
-The `data/` folder is gitignored. Both datasets must be downloaded manually.
+**Text2KGBench-LettrIA** — download from the authors' Google Drive
+([link](https://drive.google.com/file/d/1GCEEHzHkTkaMbjgrKfYgIcZVE4-VixPe/view?usp=drive_link)),
+unzip under `data/` so that the layout is:
 
-#### Text2KGBench-LettrIA
-
-Download the dataset from the official Google Drive link provided by the authors:
-https://drive.google.com/file/d/1GCEEHzHkTkaMbjgrKfYgIcZVE4-VixPe/view?usp=drive_link
-
-Unzip the archive and place it under `data/` so that the final layout is:
 ```
 data/Text2KGBench_LettrIA/
-├── airport/
-│   └── ground_truth.jsonl
-├── artist/
-│   └── ground_truth.jsonl
+├── airport/ground_truth.jsonl
+├── artist/ground_truth.jsonl
 ├── ...
-└── writtenwork/
-    └── ground_truth.jsonl
+└── writtenwork/ground_truth.jsonl
 ```
-Each `ground_truth.jsonl` file contains one JSON object per line, pairing a
-source sentence with its list of typed triples.
 
-#### OSKGC
+Each `ground_truth.jsonl` pairs a source sentence with its typed triples.
 
-Clone the official OSKGC repository into `data/OSKGC`:
+**OSKGC** — clone the official repository:
 
 ```bash
 git clone https://github.com/HeraclesWang/OSKGC.git data/OSKGC
 ```
 
-The XML entries used by the project live at
-`data/OSKGC/benchmark/data/dev/*.xml`.
+The XML entries used live at `data/OSKGC/benchmark/data/dev/*.xml`.
 
-### 4. Configure the environment variables
+### 3. Configure environment variables
 
-Create a `.env` file at the root of the repository:
+Create a `.env` at the repository root:
 
 ```bash
 LETTRIA_DIR=data/Text2KGBench_LettrIA
 OSKGC_DIR=data/OSKGC/benchmark/data/dev
 
-# OpenAI API (Task 1 graph-based QG with GPT-4o)
+# OpenAI API — Task 1 graph-based question generation (gpt-4o)
 OPENAI_API_KEY=your_openai_key_here
 
-# Eurecom LLM gateway (Task 2 generator LLM, Qwen3)
+# EURECOM LiteLLM gateway — Task 2 generator (Qwen3-30B)
 EURECOM_LLM_URL=https://...
 EURECOM_LLM_KEY=your_eurecom_key_here
-EURECOM_LLM_MODEL=qwen3-instruct
+EURECOM_LLM_MODEL=Qwen/Qwen3-30B-A3B-Instruct-2507
 ```
 
-## Usage
+---
 
-### Dataset statistics
+## Reproducing the study
 
-Print the category-level distribution of each dataset (sentences, triples,
-percentage share):
+### Dataset statistics (drives the proportional sampler)
 
 ```bash
 python stats/stats_Text2KG.py
 python stats/stats_OSKGC.py
 ```
 
-The output drives the proportional stratified sampler used in Task 1.
-
 ### Task 1 — Question generation
 
-Generate text-based questions with the fine-tuned T5 model:
-
 ```bash
-python task1_questions_generation/generate_t5.py
+python task1_questions_generation/generate_t5.py    # text-derived, fine-tuned T5
+python task1_questions_generation/generate_llm.py    # graph-derived, strictly-prompted LLM (gpt-4o)
 ```
 
-Generate graph-based questions with GPT-4o (requires a valid API key in `.env`):
+Produces `questions_{t5,llm}_{lettria,oskgc}.jsonl` (100 entries each) in
+`task1_questions_generation/output/`. Each line carries the originating sentence,
+its triples, and the generated question(s) with explicit single-/multi-hop labels.
+
+### Task 2 — Run the pipelines
 
 ```bash
-python task1_questions_generation/generate_llm.py
+# Everything (checkpointed — re-run to resume after a gateway outage):
+python task2_setup_rag/run_pipelines.py all
+
+# Or a single pipeline:
+python task2_setup_rag/run_pipelines.py {rag|graphrag|hybrid|graphrag-hybrid|graph-chunk|parent-child}
 ```
 
-Both scripts produce one `.jsonl` file per dataset in
-`task1_questions_generation/output/` (`questions_t5_*.jsonl` and
-`questions_llm_*.jsonl`), containing 100 entries each. Each line carries the
-originating sentence, the originating triples, and the generated question(s).
+Outputs land in `task2_setup_rag/output/*_results.jsonl` (547 rows each). The
+orchestrator skips already-completed `(id, hop_type)` pairs and retries transient
+API failures with exponential backoff (up to 300 s). Retrieval depths can be
+explored with `run_k_sweep.py`.
 
-### Task 2 — RAG / GraphRAG pipelines
-
-Run all pipelines (classical RAG, hybrid RAG, GraphRAG) on the four Task 1
-question files. The script is checkpointed: a crash or gateway outage can be
-resumed by re-running the same command.
+### Task 3 — MIRAGE / FactCC evaluation
 
 ```bash
-python task2_setup_rag/run_pipelines.py
-```
-
-Outputs land in `task2_setup_rag/output/`:
-- `rag_results.jsonl` — dense vector retrieval
-- `rag_hybrid_results.jsonl` — dense + BM25 fusion
-- `graphrag_results.jsonl` — ontology-constrained graph traversal
-
-Each line contains the question, the retrieved context, the generated answer
-(`llm_answer`), and the ground-truth answer, joined by `source_id` to the
-originating sentence in Task 1.
-
-### Task 3 — MIRAGE evaluation
-
-**Step 1 — build MIRAGE-ready CSVs** from the Task 2 outputs. The `source`
-column holds the original ground-truth sentence (not the retrieved context),
-the `gen` column holds the LLM-generated answer (`llm_answer`), and
-`ground_truth` holds the reference answer.
-
-```bash
+# 1. Build MIRAGE-ready CSVs from the Task 2 outputs
 python task3_evaluation/prepare_mirage_input.py
-```
 
-Outputs: `task3_evaluation/inputs/{rag,graphrag,rag_hybrid}_input.csv`.
+# 2. Run FactCC per pipeline (writes HuggingFace Arrow datasets)
+python task3_evaluation/run_mirage.py --pipeline both             # rag + graphrag
+python task3_evaluation/run_mirage.py --pipeline hybrid           # rag_hybrid
+python task3_evaluation/run_mirage.py --pipeline graphrag-hybrid
+python task3_evaluation/run_mirage.py --pipeline graph-chunk
+python task3_evaluation/run_mirage.py --pipeline parent-child
 
-**Step 2 — run FactCC** on each pipeline. The script appends a
-`faithfulness = 1 − score` column to the HuggingFace dataset, since MIRAGE's
-raw `score` is P(hallucination), not P(faithful).
-
-```bash
-python task3_evaluation/run_mirage.py --pipeline both       # rag + graphrag
-python task3_evaluation/run_mirage.py --pipeline hybrid     # rag_hybrid only
-```
-
-Outputs land in `task3_evaluation/outputs/factcc_{rag,graphrag,rag_hybrid}/`
-as HuggingFace Arrow datasets.
-
-**Step 3 — analyse and compare.** Global mean faithfulness, per-`hop_type`
-breakdown, critical-case rate, faithfulness distribution by threshold,
-hybrid-vs-baseline comparison, and the Pearson(faithfulness, sbert_cosine)
-sanity check.
-
-```bash
+# 3. Analyse: global / per-hop_type / numeric-vs-text / SBERT / sanity correlation
 python task3_evaluation/analyze_results.py
 ```
 
-The standalone diagnostics (`diagnostic_factcc.py`, `diagnostic_sbert.py`) are
-kept in-repo for traceability of the FactCC orientation fix (see
-[FactCC score direction memo](task3_evaluation/)).
+Score datasets land in `task3_evaluation/outputs/factcc_<pipeline>/`; per-row
+scores are exported to `factcc_<pipeline>_scores.csv`.
 
+**Note on score orientation.** MIRAGE exports `score = P(incorrect)`. All analysis
+uses `faithfulness = 1 − score` so that *higher = better*. The standalone
+`diagnostic_factcc.py` / `diagnostic_sbert.py` scripts document this orientation
+fix and the FactAcc (REBEL) unsuitability check.
+
+---
+
+## Evaluation methodology notes
+
+- **Coverage errors vs. hallucinations.** Explicit abstentions (*"the context does
+  not contain information about X"*) are detected by a regex-based
+  `is_coverage_error` matcher on the answer text — independent of FactCC — and
+  excluded from faithfulness, then reported separately as a coverage-error rate.
+  This prevents GraphRAG's leaf-node abstentions from inflating its apparent
+  hallucination rate.
+- **SBERT as a source-independent cross-check.** Cosine similarity between the
+  generated answer and the ground-truth reference, immune to FactCC's surface-form
+  confounds. Its positive correlation with corrected faithfulness validates the
+  score orientation.
+- **Why FactCC, not FactAcc.** REBEL-based FactAcc needs full-sentence context to
+  extract triples; on 1–3 word KG answers it degenerates (mean ≈ 0.055, mostly
+  zeros), so FactCC is used throughout.
+
+---
 
 ## References
 
-- **Text2KGBench-LettrIA** — Plu et al. *A Refined Benchmark for Text2Graph
-  Systems*. ISWC 2025. [paper](https://ceur-ws.org/Vol-4041/paper3.pdf)
-- **OSKGC** — Wang and Iwaihara. *A Benchmark for Ontology Schema-based Knowledge
-  Graph Construction from Text*. ISWC 2025.
-  [paper](https://ceur-ws.org/Vol-4041/paper1.pdf) —
-  [repository](https://github.com/HeraclesWang/OSKGC)
-- **T5 QG model** — `valhalla/t5-small-qa-qg-hl` on
-  [Hugging Face](https://huggingface.co/valhalla/t5-small-qa-qg-hl), distributed
-  through [patil-suraj/question_generation](https://github.com/patil-suraj/question_generation)
-- **MIRAGE** — Vendeville et al. *A Framework for the Quantitative Evaluation of
-  Hallucinations in RAG*.
-  [repository](https://github.com/bVendeville/MIRAGE)
-- **FactCC** — Kryściński et al. *Evaluating the Factual Consistency of
-  Abstractive Text Summarization*.
-  [model](https://huggingface.co/manueldeprada/FactCC)
-- **SBERT** — Reimers and Gurevych. *Sentence-BERT: Sentence Embeddings using
-  Siamese BERT-Networks*.
-  [sentence-transformers](https://www.sbert.net/)
+- **Text2KGBench-LettrIA** — Plu et al. *A Refined Benchmark for Text2Graph Systems.* ISWC 2025. [paper](https://ceur-ws.org/Vol-4041/paper3.pdf)
+- **OSKGC** — Wang & Iwaihara. *A Benchmark for Ontology Schema-based KG Construction from Text.* ISWC 2025. [paper](https://ceur-ws.org/Vol-4041/paper1.pdf) · [repo](https://github.com/HeraclesWang/OSKGC)
+- **T5 QG model** — `valhalla/t5-small-qa-qg-hl` · [HF](https://huggingface.co/valhalla/t5-small-qa-qg-hl) · [patil-suraj/question_generation](https://github.com/patil-suraj/question_generation)
+- **Qwen3** — `Qwen/Qwen3-30B-A3B-Instruct-2507` · [HF](https://huggingface.co/Qwen/Qwen3-30B-A3B-Instruct-2507)
+- **MIRAGE** — Vendeville et al. *A Framework for the Quantitative Evaluation of Hallucinations in RAG.* [repo](https://github.com/bVendeville/MIRAGE)
+- **FactCC** — Kryściński et al. *Evaluating the Factual Consistency of Abstractive Text Summarization.* EMNLP 2020. [model](https://huggingface.co/manueldeprada/FactCC)
+- **SBERT** — Reimers & Gurevych. *Sentence-BERT.* EMNLP 2019. [sentence-transformers](https://www.sbert.net/)
+- **Cross-encoder** — `cross-encoder/ms-marco-MiniLM-L-6-v2` (MS MARCO passage reranking)
+</content>
+</invoke>
