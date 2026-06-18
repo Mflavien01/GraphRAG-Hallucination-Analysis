@@ -16,7 +16,7 @@ single- and multi-hop reasoning over two ISWC 2025 benchmarks, scored with the
   <img alt="Status" src="https://img.shields.io/badge/status-complete-success.svg">
 </p>
 
-📄 **Full report:** [`raport.tex`](raport.tex) · **Authors:** Flavien Mathieu, Raphael Partouche (EURECOM)
+📄 **Full report:** [`graphrag-hallucination-report.pdf`](/docs/graphrag-hallucination-report.pdf) · **Authors:** Flavien Mathieu, Raphael Partouche (EURECOM)
 **Supervisors:** Raphael Troncy, Pasquale Lisena, Carmelle Meli Songuon, Thibault Ehrhart
 
 ---
