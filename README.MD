@@ -89,10 +89,18 @@ hallucination behaviour is attributable to retrieval alone.
 | **Graph-Chunk + CE** | *two independent* hybrid retrievers | Cross-Encoder | Concatenate `[CHUNK]` + `[KG]` context; LLM fuses |
 | **RAG Parent-Child** | FAISS over child chunks → parent context | — | Retrieve fine, generate on wide context (ablation) |
 
-The cross-encoder (`cross-encoder/ms-marco-MiniLM-L-6-v2`) **superseded an earlier
-Reciprocal Rank Fusion (RRF) variant**, which is reported in the paper as a
-measured intermediate iteration. The bi-encoder/embedding model throughout is
-`all-MiniLM-L6-v2`.
+**Shared components (frozen across pipelines):**
+
+- **Encoder** — `all-MiniLM-L6-v2` (sentence-transformers) for every dense index.
+- **Sparse retriever** — BM25; the hybrid pool is the **union of the top-`6k` FAISS and BM25 candidates**.
+- **Cross-encoder** — `cross-encoder/ms-marco-MiniLM-L-6-v2`.
+- **Generator** — `Qwen3-30B-A3B-Instruct-2507` (MoE, 3B active) via the EURECOM LiteLLM gateway.
+
+The cross-encoder **superseded an earlier Reciprocal Rank Fusion (RRF) variant**,
+reported in the paper as a measured intermediate iteration (Graph-Chunk:
+0.533 @ 13.5% with RRF → 0.540 @ 11.0% with the cross-encoder). Each pipeline
+writes one `*_results.jsonl` (`rag`, `graphrag`, `rag_hybrid`,
+`graphrag_hybrid`, `graph_chunk`, `rag_parent_child`), 547 rows each.
 
 ---
 
@@ -269,6 +277,21 @@ fix and the FactAcc (REBEL) unsuitability check.
 
 ---
 
+## Results by question type (FactCC faithfulness)
+
+| Pipeline | T5 | Single-hop | Multi-hop |
+|---|:--:|:--:|:--:|
+| RAG               | 0.636 | 0.524 | 0.414 |
+| GraphRAG          | 0.610 | 0.493 | 0.314 |
+| **RAG + CE**      | **0.663** | **0.525** | **0.438** |
+| Graph-Chunk + CE  | 0.614 | 0.499 | 0.426 |
+
+Multi-hop is the divergence point: plain GraphRAG collapses (0.314, ~10 points
+below RAG), and both hybrids recover it. The optimal retrieval depth differs by
+paradigm (text `k*≈4`, graph `k*≈12–20`), and the ranking is stable across `k`.
+
+---
+
 ## References
 
 - **Text2KGBench-LettrIA** — Plu et al. *A Refined Benchmark for Text2Graph Systems.* ISWC 2025. [paper](https://ceur-ws.org/Vol-4041/paper3.pdf)
@@ -279,5 +302,17 @@ fix and the FactAcc (REBEL) unsuitability check.
 - **FactCC** — Kryściński et al. *Evaluating the Factual Consistency of Abstractive Text Summarization.* EMNLP 2020. [model](https://huggingface.co/manueldeprada/FactCC)
 - **SBERT** — Reimers & Gurevych. *Sentence-BERT.* EMNLP 2019. [sentence-transformers](https://www.sbert.net/)
 - **Cross-encoder** — `cross-encoder/ms-marco-MiniLM-L-6-v2` (MS MARCO passage reranking)
+- **RAG** — Lewis et al. NeurIPS 2020. · **GraphRAG** — Edge et al. 2024 ([arXiv:2404.16130](https://arxiv.org/abs/2404.16130)) · **LLMs + KGs** — Pan et al. 2024 ([arXiv:2306.08302](https://arxiv.org/abs/2306.08302))
+- **BM25** — Robertson & Zaragoza, 2009. · **RRF** — Cormack et al. SIGIR 2009.
+- **Multi-hop reasoning** — IRCoT (Trivedi et al. ACL 2023) · ReAct (Yao et al. ICLR 2023)
+
+---
+
+## AI usage disclosure
+
+A large language model (GPT-4o) was used as the **generator** for graph-based
+question generation in Task 1. Its use is part of the experimental methodology and
+is described in the report. The accompanying report (`raport.tex`) is the
+authoritative description of the methods and results.
 </content>
 </invoke>
