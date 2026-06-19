@@ -23,7 +23,8 @@ single- and multi-hop reasoning over two ISWC 2025 benchmarks, scored with the
 
 ## TL;DR — Key findings
 
-- **Hybrid recall + cross-encoder reranking on the *text* pipeline (RAG+CE) is the single most effective intervention.** It is the most faithful pipeline and the best on answer correctness, improving over plain RAG on *every* axis.
+- **Hybrid recall + cross-encoder reranking on the *text* pipeline (RAG+CE) gives the highest mean faithfulness and answer correctness**, improving over plain RAG on *every* axis. A paired significance test, however, shows the gain over RAG is within confidence intervals; the statistically robust gap is between the text pipelines and GraphRAG, and it holds even on graph-derived questions.
+- **Statistical significance:** RAG+CE vs RAG is not significant (paired bootstrap + permutation, p ≈ 0.40), whereas RAG vs GraphRAG is (p < 0.01), even on graph-derived questions (p ≈ 0.04).
 - **GraphRAG trails** through three distinct, separable failure modes: leaf-node abstention, multi-hop context gaps, and surface-form mismatch with the text-based scorer.
 - **A novel dual *Graph-Chunk* pipeline** — fusing reranked text chunks and KG triples through `[CHUNK]`/`[KG]`-labelled context — attains the **lowest abstention rate of all pipelines (10.4%)** and recovers most of GraphRAG's multi-hop deficit.
 - **Retrieval depth is paradigm-dependent:** text pipelines saturate at small `k≈4`, graph pipelines need `k≈12–20`.
@@ -284,6 +285,7 @@ fix and the FactAcc (REBEL) unsuitability check.
 | RAG               | 0.636 | 0.524 | 0.414 |
 | GraphRAG          | 0.610 | 0.493 | 0.314 |
 | **RAG + CE**      | **0.663** | **0.525** | **0.438** |
+| GraphRAG + CE     | 0.552 | 0.516 | 0.342 |
 | Graph-Chunk + CE  | 0.614 | 0.499 | 0.426 |
 
 Multi-hop is the divergence point: plain GraphRAG collapses (0.314, ~10 points
